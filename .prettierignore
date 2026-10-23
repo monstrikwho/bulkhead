@@ -3,3 +3,4 @@ coverage/
 pnpm-lock.yaml
 *.vsix
 .vscode-test/
+out/

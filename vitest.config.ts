@@ -7,7 +7,12 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['packages/*/src/**/*.test.ts', 'packages/*/test/**/*.test.ts'],
-          exclude: [...configDefaults.exclude, '**/*.integration.test.ts'],
+          // The extension's own tests need a real VS Code: `pnpm --filter bulkhead test:e2e`.
+          exclude: [
+            ...configDefaults.exclude,
+            '**/*.integration.test.ts',
+            'packages/extension/src/test/**',
+          ],
         },
       },
       {
