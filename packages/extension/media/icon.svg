@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2a3a"/>
+      <stop offset="1" stop-color="#0f1822"/>
+    </linearGradient>
+    <clipPath id="left"><rect x="0" y="0" width="128" height="256"/></clipPath>
+    <clipPath id="right"><rect x="128" y="0" width="128" height="256"/></clipPath>
+  </defs>
+  <rect width="256" height="256" rx="52" fill="url(#bg)"/>
+  <g clip-path="url(#left)">
+    <path d="M52 70v116c0 15 34 27 76 27s76-12 76-27V70z" fill="#2bb3a3"/>
+    <path d="M52 128c0 15 34 27 76 27s76-12 76-27" fill="none" stroke="#1b2a3a" stroke-width="8"/>
+  </g>
+  <g clip-path="url(#right)">
+    <path d="M52 70v116c0 15 34 27 76 27s76-12 76-27V70z" fill="#e5533d"/>
+    <path d="M52 128c0 15 34 27 76 27s76-12 76-27" fill="none" stroke="#1b2a3a" stroke-width="8"/>
+  </g>
+  <ellipse cx="128" cy="70" rx="76" ry="27" fill="#7fe0d3" clip-path="url(#left)"/>
+  <ellipse cx="128" cy="70" rx="76" ry="27" fill="#ff8a73" clip-path="url(#right)"/>
+  <rect x="120" y="30" width="16" height="200" rx="4" fill="#f4f6f8"/>
+</svg>

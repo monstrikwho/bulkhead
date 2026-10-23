@@ -86,5 +86,10 @@ More in [docs/architecture.md](docs/architecture.md).
 1. Move **Unreleased** in `CHANGELOG.md` under a version heading and bump `version` in
    `packages/extension/package.json`.
 2. Merge, then tag: `git tag v0.1.0 && git push origin v0.1.0`.
-3. The `Release` workflow publishes to the VS Code Marketplace and Open VSX (secrets
-   `VSCE_PAT`, `OVSX_PAT`) and attaches the `.vsix` to a GitHub release.
+3. The `Release` workflow publishes to the VS Code Marketplace and Open VSX and attaches the
+   `.vsix` to a GitHub release. It reads two secrets of the `release` environment:
+   - `VSCE_PAT`: an Azure DevOps personal access token of a member of the `bulkhead`
+     Marketplace publisher, organization **All accessible organizations**, scope
+     **Marketplace → Manage**. Global PATs are retired on 1 December 2026, see the roadmap.
+   - `OVSX_PAT`: an Open VSX access token of a member of the `bulkhead` namespace; the account
+     must have signed the Eclipse Foundation Publisher Agreement.

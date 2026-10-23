@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-23
+
 ### Added
 
 - PostgreSQL connections: database → schema → table/view → columns and indexes, with row
@@ -17,3 +19,6 @@ All notable changes to this project are documented here. The format follows
   highlighted in the tree, status bar and results; writes unlock only by typing the connection
   name and lock again on disconnect.
 - Connections in user settings (synced by Settings Sync), passwords in SecretStorage.
+
+[Unreleased]: https://github.com/monstrikwho/bulkhead/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/monstrikwho/bulkhead/releases/tag/v0.1.0

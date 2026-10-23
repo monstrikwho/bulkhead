@@ -7,3 +7,4 @@ src/**
 *.vsix
 esbuild.mjs
 tsconfig.json
+media/icon.svg

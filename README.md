@@ -36,8 +36,10 @@ read-only until you deliberately unlock it, and it never looks like your laptop'
 
 ## Getting started
 
-1. Install **Bulkhead** from the VS Code Marketplace or Open VSX _(publishing soon; until then,
-   build the VSIX as described in [CONTRIBUTING](CONTRIBUTING.md))_.
+1. Install **Bulkhead** from the
+   [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=bulkhead.bulkhead) or
+   [Open VSX](https://open-vsx.org/extension/bulkhead/bulkhead), or search for `bulkhead.bulkhead`
+   in the Extensions view.
 2. Open the **Bulkhead** view in the activity bar and choose **Add Connection**.
 3. Pick **Production** for anything you must not break.
 4. Click the **New Query** icon on a connection, write SQL, press **⌘/Ctrl+Enter**.

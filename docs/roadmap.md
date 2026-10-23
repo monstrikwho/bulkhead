@@ -9,7 +9,10 @@ Stages are ordered; each ends with a release. Estimates are rough and will be re
 - [x] PostgreSQL tree, query execution, cancel, results grid
 - [x] Production read-only mode in three layers, unlock by typed confirmation
 - [ ] Connection form as a webview (test connection, SSL files, colour)
-- [ ] Marketplace icon, screenshots, publisher account
+- [x] Marketplace icon and publisher account (`bulkhead`)
+- [ ] Screenshots for the Marketplace page
+- [ ] Publish to the Marketplace with Microsoft Entra ID (`vsce publish --azure-credential`)
+      instead of `VSCE_PAT`: global Azure DevOps PATs stop working on 1 December 2026
 - [ ] SQL autocompletion from schema metadata (tables, columns, keywords)
 
 ## 0.2 — Delivery: SSH and Kubernetes

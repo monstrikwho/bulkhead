@@ -2,10 +2,15 @@
   "name": "bulkhead",
   "displayName": "Bulkhead — Database Client",
   "description": "Open-source database client with production safety built in: read-only prod connections, secrets in SecretStorage, no account, no limits.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "preview": true,
   "publisher": "bulkhead",
   "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1b2a3a",
+    "theme": "dark"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/monstrikwho/bulkhead.git"
