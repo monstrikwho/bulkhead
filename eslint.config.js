@@ -44,4 +44,9 @@ export default tseslint.config(
       globals: globals.node,
     },
   },
+  {
+    // Runs inside the preview page, not in Node.
+    files: ['scripts/preview/mockHost.js'],
+    languageOptions: { globals: globals.browser },
+  },
 )

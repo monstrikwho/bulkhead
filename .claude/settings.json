@@ -1,0 +1,55 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint:fix)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:integration)",
+      "Bash(pnpm format)",
+      "Bash(pnpm format:check)",
+      "Bash(pnpm build)",
+      "Bash(pnpm build:prod)",
+      "Bash(pnpm package)",
+      "Bash(pnpm preview:webview:*)",
+      "Bash(pnpm dev:db)",
+      "Bash(pnpm --filter * typecheck)",
+      "Bash(pnpm --filter * build)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)",
+      "Bash(unzip -l:*)"
+    ],
+    "ask": ["Bash(pnpm --filter bulkhead test:e2e)", "Bash(git push:*)", "Bash(git tag:*)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-edited.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Bulkhead: VS Code DB client, pnpm monorepo (core / driver-postgres / extension / webview). Rules: CLAUDE.md. Never connect to real databases; read-only mode is defence in depth; core stays pure; secrets only in SecretStorage; UI check with pnpm preview:webview; e2e smoke opens a visible VS Code window.'"
+          }
+        ]
+      }
+    ]
+  }
+}

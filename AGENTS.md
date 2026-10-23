@@ -1,16 +1,18 @@
-# Notes for AI coding agents
+# AGENTS.md
 
-Human contributors: everything here is also in [CONTRIBUTING.md](CONTRIBUTING.md).
+Entry point for coding agents other than Claude Code (Codex, Gemini CLI, Cursor, …).
 
-- pnpm workspace; Node 20.19+. Run `pnpm lint`, `pnpm typecheck`, `pnpm test` before proposing
-  a change; `pnpm test:integration` needs `pnpm dev:db` first.
-- `packages/core` must stay free of `vscode`, Node and DOM APIs: the webview imports it too.
-- Internal packages export TypeScript source (`exports: ./src/index.ts`); there is no per-package
-  build. esbuild bundles the extension, Vite bundles the webview.
-- Read-only mode is enforced in independent layers (`docs/read-only-mode.md`). Never weaken one
-  layer because another one exists, and add an integration test that tries to bypass any layer
-  you touch.
-- Never connect to real databases. Only the local compose stand.
-- Do not copy code from GPL or proprietary projects (ADR 0005).
-- Style: Prettier (no semicolons, single quotes, width 100), `import type` for types, comments
-  explain why rather than what.
+All rules and facts about this repository live in [CLAUDE.md](CLAUDE.md). Despite the name it is
+for every agent: read it in full before starting. This file does not repeat it.
+
+Also read, before touching the matching code:
+
+| File                                                                   | When                                     |
+| ---------------------------------------------------------------------- | ---------------------------------------- |
+| [.claude/rules/read-only-safety.md](.claude/rules/read-only-safety.md) | safety classifier, drivers' sessions     |
+| [.claude/rules/drivers.md](.claude/rules/drivers.md)                   | drivers, catalog, connection form fields |
+| [.claude/rules/webview.md](.claude/rules/webview.md)                   | webviews, their host side and protocols  |
+| [.claude/skills/release/SKILL.md](.claude/skills/release/SKILL.md)     | releasing a version                      |
+
+Claude Code formats edited files with Prettier through a hook (`.claude/settings.json`). Without
+the hook, run `pnpm format` yourself before finishing.

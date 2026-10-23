@@ -2,7 +2,7 @@
   "name": "bulkhead-monorepo",
   "private": true,
   "type": "module",
-  "description": "Bulkhead — an open-source database client for VS Code with production safety built in.",
+  "description": "Bulkhead \u2014 an open-source database client for VS Code with production safety built in.",
   "license": "MIT",
   "packageManager": "pnpm@10.34.7",
   "engines": {
@@ -22,7 +22,8 @@
     "test:integration": "vitest run --project integration",
     "package": "pnpm build:prod && pnpm --filter bulkhead package",
     "dev:db": "docker compose -f dev/docker-compose.yml up -d --wait",
-    "dev:db:down": "docker compose -f dev/docker-compose.yml down -v"
+    "dev:db:down": "docker compose -f dev/docker-compose.yml down -v",
+    "preview:webview": "node scripts/preview-webview.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -30,6 +31,7 @@
     "eslint": "^10.13.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
+    "playwright-core": "^1.64.1",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.0",
