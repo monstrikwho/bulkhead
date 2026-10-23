@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-23
+
 ### Added
 
 - Connection form in an editor tab instead of a chain of input boxes: pick a database or a hosted
@@ -28,5 +30,6 @@ All notable changes to this project are documented here. The format follows
   name and lock again on disconnect.
 - Connections in user settings (synced by Settings Sync), passwords in SecretStorage.
 
-[Unreleased]: https://github.com/monstrikwho/bulkhead/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/monstrikwho/bulkhead/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/monstrikwho/bulkhead/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/monstrikwho/bulkhead/releases/tag/v0.1.0
