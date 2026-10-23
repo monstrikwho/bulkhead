@@ -78,7 +78,9 @@ More in [docs/architecture.md](docs/architecture.md).
 2. Decide how read-only mode is enforced **by the server**, not only by the client, and write
    integration tests that try to get around it.
 3. Add the kind to `DRIVER_KINDS`, register the driver in `packages/extension/src/drivers.ts`
-   and the `driver` enum in the extension's `package.json`.
+   and the `driver` enum in the extension's `package.json`. Give the planned entry in
+   `packages/core/src/catalog.ts` its driver, so the connection picker offers it; the form is
+   built from the driver's `optionFields`, and `parseConnectionString` makes pasting work.
 4. Add a service to `dev/docker-compose.yml` and a CI job.
 
 ## Releasing (maintainers)

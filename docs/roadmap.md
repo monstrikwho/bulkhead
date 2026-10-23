@@ -8,7 +8,9 @@ Stages are ordered; each ends with a release. Estimates are rough and will be re
 - [x] Driver, transport and webview contracts
 - [x] PostgreSQL tree, query execution, cancel, results grid
 - [x] Production read-only mode in three layers, unlock by typed confirmation
-- [ ] Connection form as a webview (test connection, SSL files, colour)
+- [x] Connection form as a webview: database picker with hosted presets, pasted connection
+      strings, test connection, database list, environment and read-only
+- [ ] Connection form: SSL certificate files, connection colour
 - [x] Marketplace icon and publisher account (`bulkhead`)
 - [ ] Screenshots for the Marketplace page
 - [ ] Publish to the Marketplace with Microsoft Entra ID (`vsce publish --azure-credential`)

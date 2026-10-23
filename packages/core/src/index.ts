@@ -1,4 +1,6 @@
+export * from './catalog'
 export * from './connection'
+export * from './connectionForm'
 export * from './driver'
 export * from './protocol'
 export * from './safety/classify'

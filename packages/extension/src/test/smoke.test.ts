@@ -27,6 +27,19 @@ suite('extension smoke', () => {
     await vscode.commands.executeCommand('bulkhead.results.focus')
   })
 
+  test('opens the connection form once, in an editor tab', async () => {
+    const formTabs = () =>
+      vscode.window.tabGroups.all
+        .flatMap((group) => group.tabs)
+        .filter(
+          (tab) => tab.input instanceof vscode.TabInputWebview && tab.label === 'New Connection',
+        )
+    await vscode.commands.executeCommand('bulkhead.connection.add')
+    await vscode.commands.executeCommand('bulkhead.connection.add')
+    assert.equal(formTabs().length, 1)
+    await vscode.window.tabGroups.close(formTabs())
+  })
+
   test('survives a broken connection entry in settings', async () => {
     const config = vscode.workspace.getConfiguration('bulkhead')
     await config.update('connections', [{ name: 'broken' }], vscode.ConfigurationTarget.Global)

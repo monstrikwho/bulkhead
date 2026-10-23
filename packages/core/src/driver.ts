@@ -9,6 +9,9 @@ export type OptionField = {
   label: string
   required?: boolean
   placeholder?: string
+  description?: string
+  /** Where the form shows it; `connection` by default. */
+  section?: 'connection' | 'security' | 'advanced'
 } & (
   | { kind: 'string'; default?: string }
   | { kind: 'number'; default?: number }
@@ -20,6 +23,12 @@ export interface SecretField {
   key: string
   label: string
   optional?: boolean
+}
+
+/** What a pasted connection string (URL, JDBC URL, …) says about a connection. */
+export interface ParsedConnectionString {
+  options: Record<string, unknown>
+  secrets: Record<string, string>
 }
 
 /**
@@ -125,5 +134,10 @@ export interface Driver<Options = unknown> {
   target(options: Options): Endpoint
   /** Short summary for the tree, e.g. `app@db.internal:5432/app`. */
   describe(options: Options): string
+  /**
+   * Reads a connection string the user pasted; `undefined` if it is not one of this driver's.
+   * Throws `ConfigError` when it is this driver's but malformed.
+   */
+  parseConnectionString?(text: string): ParsedConnectionString | undefined
   connect(request: ConnectRequest<Options>): Promise<DriverSession>
 }

@@ -28,7 +28,7 @@ read-only until you deliberately unlock it, and it never looks like your laptop'
 
 | Area              | Today                                                                            |
 | ----------------- | -------------------------------------------------------------------------------- |
-| Connections       | PostgreSQL, direct                                                               |
+| Connections       | PostgreSQL and hosted Postgres (Supabase, Neon, RDS, …); paste a connection URL  |
 | Explorer          | databases → schemas → tables and views (with row estimates) → columns, indexes   |
 | SQL               | run statement under cursor (⌘/Ctrl+Enter) or script (⌘/Ctrl+Shift+Enter), cancel |
 | Results           | virtualised grid for large results, several result sets, copy as TSV/JSON        |

@@ -55,6 +55,14 @@ Results go to `ResultsView` as `run-started` / `run-finished` messages.
 messages of the last run and replays them when the webview (re)loads and reports `ready`.
 Messages from the webview are validated with `isWebviewToHost` before use.
 
+**Connection form.** `bulkhead.connection.add` and `.edit` open `ConnectionFormPanel`, a webview in
+the editor area rendered by the same bundle as the results (the page's `data-app` picks the app).
+The picker lists `core/src/catalog.ts`: drivers and hosted presets of them. The form is built from
+the driver's `optionFields` and talks to the host with the messages in
+`core/src/connectionForm.ts`: `parse` (the drivers' `parseConnectionString`), `test` (a
+throwaway read-only session that lists databases) and `save`. The webview never writes settings
+or secrets; the host validates the draft with the driver and saves it.
+
 ## Storage
 
 | What                        | Where                                              | Synced          |

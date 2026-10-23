@@ -1,7 +1,7 @@
-import { randomBytes } from 'node:crypto'
-
 import { isWebviewToHost, type HostToWebview } from '@bulkhead/core'
 import * as vscode from 'vscode'
+
+import { webviewHtml, webviewRoot } from '../webview/html'
 
 /**
  * The results grid, a React app in the bottom panel. Messages sent before the webview is ready
@@ -24,9 +24,11 @@ export class ResultsView implements vscode.WebviewViewProvider, vscode.Disposabl
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view
     this.ready = false
-    const root = vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview')
-    view.webview.options = { enableScripts: true, localResourceRoots: [root] }
-    view.webview.html = this.html(view.webview, root)
+    view.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [webviewRoot(this.extensionUri)],
+    }
+    view.webview.html = webviewHtml(view.webview, this.extensionUri, 'results', 'Results')
 
     this.disposables.push(
       view.webview.onDidReceiveMessage((message: unknown) => {
@@ -64,31 +66,5 @@ export class ResultsView implements vscode.WebviewViewProvider, vscode.Disposabl
 
   dispose(): void {
     for (const disposable of this.disposables) disposable.dispose()
-  }
-
-  private html(webview: vscode.Webview, root: vscode.Uri): string {
-    const nonce = randomBytes(16).toString('base64')
-    const script = webview.asWebviewUri(vscode.Uri.joinPath(root, 'index.js'))
-    const style = webview.asWebviewUri(vscode.Uri.joinPath(root, 'index.css'))
-    const csp = [
-      "default-src 'none'",
-      `style-src ${webview.cspSource}`,
-      `font-src ${webview.cspSource}`,
-      `script-src 'nonce-${nonce}'`,
-    ].join('; ')
-    return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="Content-Security-Policy" content="${csp}" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="${style.toString()}" />
-    <title>Results</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" nonce="${nonce}" src="${script.toString()}"></script>
-  </body>
-</html>`
   }
 }

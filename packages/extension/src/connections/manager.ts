@@ -85,6 +85,40 @@ export class ConnectionManager implements vscode.Disposable {
     }
   }
 
+  /**
+   * Opens a throwaway session to check a profile that may not be saved yet, and lists the
+   * databases the user can open. Always read-only: testing a form must never write anything.
+   */
+  async probe(
+    profile: ConnectionProfile,
+    secrets: Readonly<Record<string, string>>,
+  ): Promise<{ durationMs: number; databases: string[] }> {
+    const driver = driverFor(profile.driver)
+    const options = driver.parseOptions(profile.options)
+    const started = Date.now()
+    const tunnel = await createTransport(profile.transport).open(driver.target(options))
+    try {
+      const session = await driver.connect({
+        profile,
+        options,
+        endpoint: tunnel.endpoint,
+        secrets,
+        accessMode: 'read-only',
+      })
+      try {
+        const nodes = await session.listChildren()
+        return {
+          durationMs: Date.now() - started,
+          databases: nodes.filter((node) => node.kind === 'database').map((node) => node.label),
+        }
+      } finally {
+        await session.close()
+      }
+    } finally {
+      await tunnel.close()
+    }
+  }
+
   dispose(): void {
     for (const id of [...this.live.keys()]) this.close(id).catch(() => undefined)
     this.changed.dispose()

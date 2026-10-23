@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Connection form in an editor tab instead of a chain of input boxes: pick a database or a hosted
+  PostgreSQL service (Supabase, Neon, TimescaleDB, Amazon RDS, Google Cloud SQL, DigitalOcean,
+  Render), or paste a connection string (`postgres://…`, JDBC URL or libpq `key=value`) to fill
+  in every field. **Test** connects read-only and lists the databases you can open; production
+  connections are marked red right in the form.
+
 ## [0.1.0] - 2026-10-23
 
 ### Added

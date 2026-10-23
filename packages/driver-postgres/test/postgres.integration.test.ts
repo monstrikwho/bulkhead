@@ -214,3 +214,29 @@ describe('explorer', () => {
     expect(indexes.map((n) => n.description)).toEqual(['primary key', 'unique'])
   })
 })
+
+describe('connection strings', () => {
+  it('connects with exactly what a pasted URL describes', async () => {
+    const parsed = postgresDriver.parseConnectionString!(url.toString())!
+    const profile = parseConnectionProfile({
+      id: 'test-url',
+      name: 'test',
+      driver: 'postgres',
+      options: parsed.options,
+    })
+    const options = postgresDriver.parseOptions(profile.options)
+    const session = await postgresDriver.connect({
+      profile,
+      options,
+      endpoint: postgresDriver.target(options),
+      secrets: parsed.secrets,
+      accessMode: 'read-only',
+    })
+    try {
+      const databases = await session.listChildren()
+      expect(databases[0]?.label).toBe(url.pathname.slice(1))
+    } finally {
+      await session.close()
+    }
+  })
+})

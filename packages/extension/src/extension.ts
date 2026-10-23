@@ -1,10 +1,10 @@
 import type { ConnectionProfile } from '@bulkhead/core'
 import * as vscode from 'vscode'
 
+import { ConnectionFormPanel } from './connections/formPanel'
 import { ConnectionManager } from './connections/manager'
 import { SecretVault } from './connections/secrets'
 import { ConnectionStore } from './connections/store'
-import { connectionWizard } from './connections/wizard'
 import { driverFor } from './drivers'
 import { ConnectionTreeProvider, type TreeElement } from './explorer/tree'
 import { EditorBindings } from './query/editorBindings'
@@ -19,6 +19,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const bindings = new EditorBindings(context.workspaceState, store, manager)
   const results = new ResultsView(context.extensionUri, (runId) => queries.cancel(runId))
   const queries = new QueryRunner(manager, bindings, results)
+  const formDeps = { extensionUri: context.extensionUri, store, secrets, manager }
 
   const treeView = vscode.window.createTreeView('bulkhead.connections', {
     treeDataProvider: tree,
@@ -63,21 +64,11 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     manager.onDidChange(() => tree.refresh()),
 
-    command('bulkhead.connection.add', async () => {
-      const profile = await connectionWizard(secrets)
-      if (!profile) return
-      await store.save(profile)
-      await vscode.commands.executeCommand('bulkhead.connections.focus')
-    }),
+    command('bulkhead.connection.add', () => ConnectionFormPanel.show(formDeps)),
 
     command('bulkhead.connection.edit', async (element?: TreeElement) => {
       const existing = await profileOf(element)
-      if (!existing) return
-      const profile = await connectionWizard(secrets, existing)
-      if (!profile) return
-      // A changed password needs a fresh session even if nothing else changed.
-      await manager.disconnect(profile.id)
-      await store.save(profile)
+      if (existing) ConnectionFormPanel.show(formDeps, existing)
     }),
 
     command('bulkhead.connection.remove', async (element?: TreeElement) => {
