@@ -1,0 +1,51 @@
+name: Release
+
+# Push a tag that matches packages/extension/package.json, e.g. `v0.1.0`.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Configure required reviewers on this environment so nothing ships without a human.
+    environment: release
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check the tag matches the extension version
+        run: |
+          version=$(node -p "require('./packages/extension/package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version $version" >&2
+            exit 1
+          fi
+
+      - run: pnpm lint && pnpm typecheck && pnpm test
+      - run: pnpm package
+
+      - name: Publish to the VS Code Marketplace
+        working-directory: packages/extension
+        run: npx --yes @vscode/vsce@3 publish --packagePath *.vsix --no-dependencies
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX
+        working-directory: packages/extension
+        run: npx --yes ovsx@1 publish *.vsix
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" packages/extension/*.vsix --generate-notes --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -1,0 +1,17 @@
+{
+  "name": "@bulkhead/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Driver contracts, SQL tooling and safety policy shared by the extension host and the webview. No VS Code or Node APIs.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck, unit tests, package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm package
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vsix
+          path: packages/extension/*.vsix
+          if-no-files-found: error
+
+  integration:
+    name: Integration tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: bulkhead
+          POSTGRES_PASSWORD: bulkhead
+          POSTGRES_DB: bulkhead
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bulkhead -d bulkhead"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      BULKHEAD_PG_URL: postgres://bulkhead:bulkhead@localhost:5432/bulkhead
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Seed the database
+        run: psql "$BULKHEAD_PG_URL" -v ON_ERROR_STOP=1 -f dev/postgres/init.sql
+      - run: pnpm test:integration
+
+  e2e:
+    name: VS Code smoke test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Run (Linux, virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a pnpm --filter bulkhead test:e2e
+      - name: Run
+        if: runner.os != 'Linux'
+        run: pnpm --filter bulkhead test:e2e

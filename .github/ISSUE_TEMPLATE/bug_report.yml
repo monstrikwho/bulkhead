@@ -1,0 +1,45 @@
+name: Bug report
+description: Something does not work as described.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time! Please **never paste passwords, hostnames or data from a real
+        production database** — reproduce on the local stand (`pnpm dev:db`) if you can.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add a PostgreSQL connection marked Production
+        2. Run `…`
+        3. See …
+    validations:
+      required: true
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      options: [PostgreSQL, Other]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Bulkhead, editor (VS Code / Cursor / VSCodium) and database server.
+      placeholder: Bulkhead 0.1.0, VS Code 1.105, PostgreSQL 17
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages or logs
+      render: text

@@ -1,0 +1,24 @@
+{
+  "name": "@bulkhead/driver-postgres",
+  "version": "0.0.0",
+  "private": true,
+  "description": "PostgreSQL driver for Bulkhead, built on node-postgres.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@bulkhead/core": "workspace:*",
+    "pg": "^8.23.1",
+    "pg-cursor": "^2.22.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "@types/pg-cursor": "^2.7.2"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "bulkhead-monorepo",
+  "private": true,
+  "type": "module",
+  "description": "Bulkhead — an open-source database client for VS Code with production safety built in.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.7",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "pnpm --filter @bulkhead/webview build && pnpm --filter bulkhead build",
+    "build:prod": "pnpm --filter @bulkhead/webview build && pnpm --filter bulkhead build:prod",
+    "watch": "pnpm --parallel --filter @bulkhead/webview --filter bulkhead watch",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
+    "lint:fix": "pnpm lint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "test:integration": "vitest run --project integration",
+    "package": "pnpm build:prod && pnpm --filter bulkhead package",
+    "dev:db": "docker compose -f dev/docker-compose.yml up -d --wait",
+    "dev:db:down": "docker compose -f dev/docker-compose.yml down -v"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^20.19.0",
+    "eslint": "^10.13.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^4.1.12"
+  }
+}

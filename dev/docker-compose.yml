@@ -1,0 +1,20 @@
+# Local test stands. Ports are bound to 127.0.0.1 and offset from defaults so they never clash
+# with a database you already run. ClickHouse, Redis, RabbitMQ and sshd arrive with their stages.
+name: bulkhead-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: bulkhead
+      POSTGRES_PASSWORD: bulkhead
+      POSTGRES_DB: bulkhead
+    ports:
+      - 127.0.0.1:55432:5432
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U bulkhead -d bulkhead]
+      interval: 2s
+      timeout: 3s
+      retries: 30

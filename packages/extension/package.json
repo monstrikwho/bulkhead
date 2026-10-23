@@ -1,0 +1,403 @@
+{
+  "name": "bulkhead",
+  "displayName": "Bulkhead — Database Client",
+  "description": "Open-source database client with production safety built in: read-only prod connections, secrets in SecretStorage, no account, no limits.",
+  "version": "0.0.1",
+  "preview": true,
+  "publisher": "bulkhead",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/monstrikwho/bulkhead.git"
+  },
+  "bugs": {
+    "url": "https://github.com/monstrikwho/bulkhead/issues"
+  },
+  "homepage": "https://github.com/monstrikwho/bulkhead#readme",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "database",
+    "sql",
+    "postgres",
+    "postgresql",
+    "clickhouse",
+    "redis",
+    "rabbitmq",
+    "read-only",
+    "production"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:sql"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bulkhead",
+          "title": "Bulkhead",
+          "icon": "media/bulkhead.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "bulkhead-results",
+          "title": "Bulkhead",
+          "icon": "media/bulkhead.svg"
+        }
+      ]
+    },
+    "views": {
+      "bulkhead": [
+        {
+          "id": "bulkhead.connections",
+          "name": "Connections"
+        }
+      ],
+      "bulkhead-results": [
+        {
+          "type": "webview",
+          "id": "bulkhead.results",
+          "name": "Results"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "bulkhead.connections",
+        "contents": "No connections yet.\n[Add Connection](command:bulkhead.connection.add)\nConnections are stored in your user settings and travel with Settings Sync. Passwords stay in the OS keychain via VS Code SecretStorage."
+      }
+    ],
+    "commands": [
+      {
+        "command": "bulkhead.connection.add",
+        "title": "Add Connection",
+        "category": "Bulkhead",
+        "icon": "$(add)"
+      },
+      {
+        "command": "bulkhead.connection.edit",
+        "title": "Edit Connection",
+        "category": "Bulkhead"
+      },
+      {
+        "command": "bulkhead.connection.remove",
+        "title": "Remove Connection",
+        "category": "Bulkhead"
+      },
+      {
+        "command": "bulkhead.connection.connect",
+        "title": "Connect",
+        "category": "Bulkhead",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "bulkhead.connection.disconnect",
+        "title": "Disconnect",
+        "category": "Bulkhead",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "bulkhead.connection.unlockWrites",
+        "title": "Unlock Writes…",
+        "category": "Bulkhead",
+        "icon": "$(unlock)"
+      },
+      {
+        "command": "bulkhead.connection.lockWrites",
+        "title": "Lock Writes (Read-Only)",
+        "category": "Bulkhead",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "bulkhead.explorer.refresh",
+        "title": "Refresh",
+        "category": "Bulkhead",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "bulkhead.query.new",
+        "title": "New Query",
+        "category": "Bulkhead",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "bulkhead.query.run",
+        "title": "Run Statement",
+        "category": "Bulkhead",
+        "icon": "$(play)"
+      },
+      {
+        "command": "bulkhead.query.runAll",
+        "title": "Run Script",
+        "category": "Bulkhead",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "bulkhead.query.cancel",
+        "title": "Cancel Query",
+        "category": "Bulkhead",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "bulkhead.query.selectConnection",
+        "title": "Select Connection for Editor",
+        "category": "Bulkhead"
+      },
+      {
+        "command": "bulkhead.node.open",
+        "title": "Open Data",
+        "category": "Bulkhead",
+        "icon": "$(table)"
+      },
+      {
+        "command": "bulkhead.node.copyName",
+        "title": "Copy Name",
+        "category": "Bulkhead"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "bulkhead.connection.edit",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.connection.remove",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.connection.connect",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.connection.disconnect",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.connection.unlockWrites",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.connection.lockWrites",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.node.open",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.node.copyName",
+          "when": "false"
+        },
+        {
+          "command": "bulkhead.query.run",
+          "when": "editorLangId == sql"
+        },
+        {
+          "command": "bulkhead.query.runAll",
+          "when": "editorLangId == sql"
+        },
+        {
+          "command": "bulkhead.query.selectConnection",
+          "when": "editorLangId == sql"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "bulkhead.connection.add",
+          "when": "view == bulkhead.connections",
+          "group": "navigation@1"
+        },
+        {
+          "command": "bulkhead.explorer.refresh",
+          "when": "view == bulkhead.connections",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "bulkhead.query.new",
+          "when": "view == bulkhead.connections && viewItem =~ /^(connection\\||node\\|database\\b)/",
+          "group": "inline@1"
+        },
+        {
+          "command": "bulkhead.node.open",
+          "when": "view == bulkhead.connections && viewItem =~ /\\|previewable\\b/",
+          "group": "inline@1"
+        },
+        {
+          "command": "bulkhead.connection.unlockWrites",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|.*\\|locked\\b/",
+          "group": "inline@2"
+        },
+        {
+          "command": "bulkhead.query.new",
+          "when": "view == bulkhead.connections && viewItem =~ /^(connection\\||node\\|database\\b)/",
+          "group": "1_query@1"
+        },
+        {
+          "command": "bulkhead.node.open",
+          "when": "view == bulkhead.connections && viewItem =~ /\\|previewable\\b/",
+          "group": "1_query@2"
+        },
+        {
+          "command": "bulkhead.node.copyName",
+          "when": "view == bulkhead.connections && viewItem =~ /^node\\|/",
+          "group": "1_query@3"
+        },
+        {
+          "command": "bulkhead.connection.connect",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|disconnected\\b/",
+          "group": "2_connection@1"
+        },
+        {
+          "command": "bulkhead.connection.disconnect",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|connected\\b/",
+          "group": "2_connection@2"
+        },
+        {
+          "command": "bulkhead.connection.unlockWrites",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|.*\\|locked\\b/",
+          "group": "3_safety@1"
+        },
+        {
+          "command": "bulkhead.connection.lockWrites",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|.*\\|writable\\b/",
+          "group": "3_safety@2"
+        },
+        {
+          "command": "bulkhead.explorer.refresh",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|connected\\b/",
+          "group": "4_view@1"
+        },
+        {
+          "command": "bulkhead.connection.edit",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|/",
+          "group": "9_manage@1"
+        },
+        {
+          "command": "bulkhead.connection.remove",
+          "when": "view == bulkhead.connections && viewItem =~ /^connection\\|/",
+          "group": "9_manage@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "bulkhead.query.run",
+          "when": "editorLangId == sql",
+          "group": "navigation@1"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "bulkhead.query.run",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && editorLangId == sql"
+      },
+      {
+        "command": "bulkhead.query.runAll",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
+        "when": "editorTextFocus && editorLangId == sql"
+      }
+    ],
+    "configuration": {
+      "title": "Bulkhead",
+      "properties": {
+        "bulkhead.connections": {
+          "type": "array",
+          "scope": "application",
+          "default": [],
+          "markdownDescription": "Saved connections. Synced by Settings Sync. Passwords are **not** stored here: they live in VS Code SecretStorage on each machine. Prefer **Bulkhead: Add Connection** over editing by hand.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "driver"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier; secrets are keyed by it."
+              },
+              "name": {
+                "type": "string"
+              },
+              "driver": {
+                "type": "string",
+                "enum": [
+                  "postgres"
+                ]
+              },
+              "production": {
+                "type": "boolean",
+                "default": false,
+                "description": "Production connections are read-only until writes are explicitly unlocked, and are highlighted in red."
+              },
+              "readOnly": {
+                "type": "boolean",
+                "description": "Start a non-production connection read-only."
+              },
+              "transport": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "direct"
+                    ]
+                  }
+                }
+              },
+              "options": {
+                "type": "object",
+                "description": "Driver settings such as host, port, database and user."
+              }
+            }
+          }
+        },
+        "bulkhead.query.maxRows": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 1,
+          "maximum": 1000000,
+          "description": "Maximum rows fetched per result set. The rest is not read from the server."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "build:prod": "node esbuild.mjs --production",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc -p tsconfig.json",
+    "package": "node ../../scripts/copy-package-files.mjs && vsce package --no-dependencies",
+    "build:tests": "node esbuild.mjs --tests",
+    "test:e2e": "node esbuild.mjs --tests && node scripts/run-e2e.mjs"
+  },
+  "devDependencies": {
+    "@bulkhead/core": "workspace:*",
+    "@bulkhead/driver-postgres": "workspace:*",
+    "@types/mocha": "^10.0.10",
+    "@types/vscode": "1.96.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.2",
+    "mocha": "^11.8.0"
+  }
+}
