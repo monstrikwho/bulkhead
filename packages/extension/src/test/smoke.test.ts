@@ -28,15 +28,12 @@ suite('extension smoke', () => {
   })
 
   test('opens the connection form once, in an editor tab', async () => {
-    const formTabs = () =>
-      vscode.window.tabGroups.all
-        .flatMap((group) => group.tabs)
-        .filter(
-          (tab) => tab.input instanceof vscode.TabInputWebview && tab.label === 'New Connection',
-        )
+    // The tab model is updated asynchronously after a panel is created.
     await vscode.commands.executeCommand('bulkhead.connection.add')
+    await waitFor(() => formTabs().length > 0)
     await vscode.commands.executeCommand('bulkhead.connection.add')
-    assert.equal(formTabs().length, 1)
+    await delay(300)
+    assert.equal(formTabs().length, 1, `open tabs: ${describeTabs()}`)
     await vscode.window.tabGroups.close(formTabs())
   })
 
@@ -47,3 +44,31 @@ suite('extension smoke', () => {
     await config.update('connections', undefined, vscode.ConfigurationTarget.Global)
   })
 })
+
+const allTabs = () => vscode.window.tabGroups.all.flatMap((group) => group.tabs)
+
+/** Webview panels get a view type prefixed by VS Code, e.g. `mainThreadWebview-bulkhead.connectionForm`. */
+const formTabs = () =>
+  allTabs().filter(
+    (tab) =>
+      tab.input instanceof vscode.TabInputWebview &&
+      tab.input.viewType.endsWith('bulkhead.connectionForm'),
+  )
+
+const describeTabs = () =>
+  allTabs()
+    .map((tab) => {
+      const input = tab.input as { viewType?: string } | undefined
+      return `${tab.label} (${input?.viewType ?? typeof tab.input})`
+    })
+    .join(', ') || 'none'
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function waitFor(condition: () => boolean, timeoutMs = 5000): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  while (!condition()) {
+    if (Date.now() > deadline) throw new Error(`Timed out; open tabs: ${describeTabs()}`)
+    await delay(50)
+  }
+}
