@@ -1,5 +1,9 @@
 import * as assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import * as vscode from 'vscode'
 
 const EXTENSION_ID = 'bulkhead.bulkhead'
@@ -37,6 +41,66 @@ suite('extension smoke', () => {
     await vscode.window.tabGroups.close(formTabs())
   })
 
+  test('lets an MCP agent open the connection form without saving', async () => {
+    const client = await agent()
+    const opened = await client.callTool({
+      name: 'configure_connection',
+      arguments: { name: 'from agent', options: { host: 'db.internal', user: 'app' } },
+    })
+    assert.ok(!opened.isError, JSON.stringify(opened.content))
+    await waitFor(() => formTabs().length > 0)
+    assert.equal(
+      vscode.workspace.getConfiguration('bulkhead').get<unknown[]>('connections', []).length,
+      0,
+      'nothing is saved until the user saves',
+    )
+    const refused = await client.callTool({
+      name: 'configure_connection',
+      arguments: { connectionId: 'nope' },
+    })
+    assert.equal(refused.isError, true)
+    await client.close()
+    await vscode.window.tabGroups.close(formTabs())
+  })
+
+  test('lets an MCP agent test and save, but not weaken protection', async () => {
+    const client = await agent()
+    const connections = () =>
+      vscode.workspace.getConfiguration('bulkhead').get<{ id: string }[]>('connections', [])
+
+    // Port 1 refuses at once: the probe runs for real and reports the failure.
+    const failed = await client.callTool({
+      name: 'test_connection',
+      arguments: { options: { host: '127.0.0.1', port: 1, user: 'app' } },
+    })
+    assert.equal(failed.isError, true, JSON.stringify(failed.content))
+
+    const saved = await client.callTool({
+      name: 'save_connection',
+      arguments: {
+        name: 'orders',
+        environment: 'production',
+        options: { host: 'db.internal', user: 'app' },
+        secrets: { password: 'smoke-only' },
+      },
+    })
+    assert.ok(!saved.isError, JSON.stringify(saved.content))
+    await waitFor(() => connections().length === 1)
+    const [profile] = connections()
+    assert.ok(!JSON.stringify(profile).includes('smoke-only'), 'no secret in settings')
+
+    const weakened = await client.callTool({
+      name: 'save_connection',
+      arguments: { connectionId: profile!.id, environment: 'development' },
+    })
+    assert.equal(weakened.isError, true)
+    assert.ok(JSON.stringify(weakened.content).includes('configure_connection'))
+    await client.close()
+    await vscode.workspace
+      .getConfiguration('bulkhead')
+      .update('connections', undefined, vscode.ConfigurationTarget.Global)
+  })
+
   test('survives a broken connection entry in settings', async () => {
     const config = vscode.workspace.getConfiguration('bulkhead')
     await config.update('connections', [{ name: 'broken' }], vscode.ConfigurationTarget.Global)
@@ -44,6 +108,34 @@ suite('extension smoke', () => {
     await config.update('connections', undefined, vscode.ConfigurationTarget.Global)
   })
 })
+
+/** An MCP client connected to this window's server, found through its instance file. */
+async function agent(): Promise<Client> {
+  const userData = process.env.BULKHEAD_TEST_USER_DATA
+  assert.ok(userData, 'run through scripts/run-e2e.mjs')
+  const file = join(
+    userData,
+    'User/globalStorage/bulkhead.bulkhead/mcp/instances',
+    `${process.pid}.json`,
+  )
+  await waitFor(() => readInstance(file) !== undefined)
+  const { port, token } = readInstance(file)!
+  const client = new Client({ name: 'smoke', version: '1' })
+  await client.connect(
+    new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`), {
+      requestInit: { headers: { authorization: `Bearer ${token}` } },
+    }),
+  )
+  return client
+}
+
+function readInstance(file: string): { port: number; token: string } | undefined {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8')) as { port: number; token: string }
+  } catch {
+    return undefined
+  }
+}
 
 const allTabs = () => vscode.window.tabGroups.all.flatMap((group) => group.tabs)
 

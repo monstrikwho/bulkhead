@@ -29,8 +29,10 @@ const options = tests
     }
   : {
       ...common,
-      entryPoints: ['src/extension.ts'],
-      outfile: 'dist/extension.js',
+      // The MCP bridge runs as a separate process (src/mcp/bridge.ts) and must not pull in
+      // the extension or the MCP SDK.
+      entryPoints: { extension: 'src/extension.ts', 'mcp-bridge': 'src/mcp/bridge.ts' },
+      outdir: 'dist',
       minify: production,
       sourcemap: !production,
     }

@@ -34,11 +34,14 @@
     "redis",
     "rabbitmq",
     "read-only",
-    "production"
+    "production",
+    "mcp",
+    "ai"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onLanguage:sql"
+    "onLanguage:sql",
+    "onStartupFinished"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -169,6 +172,11 @@
       {
         "command": "bulkhead.node.copyName",
         "title": "Copy Name",
+        "category": "Bulkhead"
+      },
+      {
+        "command": "bulkhead.mcp.connectAgent",
+        "title": "Connect an AI Agent…",
         "category": "Bulkhead"
       }
     ],
@@ -382,9 +390,21 @@
           "minimum": 1,
           "maximum": 1000000,
           "description": "Maximum rows fetched per result set. The rest is not read from the server."
+        },
+        "bulkhead.mcp.enabled": {
+          "type": "boolean",
+          "scope": "machine",
+          "default": true,
+          "markdownDescription": "Let AI agents (GitHub Copilot, Claude Code, Cursor, …) list, test and save connections or open the connection form filled in, through a local MCP server on `127.0.0.1`. Agents never read saved passwords, run queries or unlock writes, and cannot turn off production or read-only without the form. Set agents up with **Bulkhead: Connect an AI Agent…**."
         }
       }
-    }
+    },
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "bulkhead.mcp",
+        "label": "Bulkhead"
+      }
+    ]
   },
   "scripts": {
     "build": "node esbuild.mjs",
@@ -398,11 +418,13 @@
   "devDependencies": {
     "@bulkhead/core": "workspace:*",
     "@bulkhead/driver-postgres": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@types/mocha": "^10.0.10",
     "@types/vscode": "1.96.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.28.2",
-    "mocha": "^11.8.0"
+    "mocha": "^11.8.0",
+    "zod": "^4.6.7"
   }
 }

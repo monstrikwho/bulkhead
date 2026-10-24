@@ -38,7 +38,7 @@ window.acquireVsCodeApi = () => ({
     switch (message.type) {
       case 'ready':
         if (scenario.app === 'results') scenario.results.forEach((item) => reply(item))
-        else reply({ type: 'init', drivers, existing: scenario.existing })
+        else reply({ type: 'init', drivers, start: scenario.start })
         break
       case 'parse':
         reply({ type: 'parsed', requestId: message.requestId, result: parse(message.text) })

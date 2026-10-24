@@ -7,6 +7,7 @@ import { SecretVault } from './connections/secrets'
 import { ConnectionStore } from './connections/store'
 import { driverFor } from './drivers'
 import { ConnectionTreeProvider, type TreeElement } from './explorer/tree'
+import { AgentAccess } from './mcp/agentAccess'
 import { EditorBindings } from './query/editorBindings'
 import { QueryRunner } from './query/runner'
 import { ResultsView } from './results/resultsView'
@@ -20,6 +21,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const results = new ResultsView(context.extensionUri, (runId) => queries.cancel(runId))
   const queries = new QueryRunner(manager, bindings, results)
   const formDeps = { extensionUri: context.extensionUri, store, secrets, manager }
+  const agents = new AgentAccess(context, formDeps)
+  void agents.update()
 
   const treeView = vscode.window.createTreeView('bulkhead.connections', {
     treeDataProvider: tree,
@@ -54,6 +57,7 @@ export function activate(context: vscode.ExtensionContext): void {
     manager,
     bindings,
     results,
+    agents,
     treeView,
     vscode.window.registerWebviewViewProvider(ResultsView.viewId, results, {
       webviewOptions: { retainContextWhenHidden: true },
@@ -108,6 +112,8 @@ export function activate(context: vscode.ExtensionContext): void {
       const profile = await profileOf(element)
       if (profile) await manager.setAccessMode(profile, 'read-only')
     }),
+
+    command('bulkhead.mcp.connectAgent', () => agents.connectAgent()),
 
     command('bulkhead.explorer.refresh', (element?: TreeElement) => tree.refresh(element)),
 

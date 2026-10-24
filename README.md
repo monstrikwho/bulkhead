@@ -26,13 +26,14 @@ read-only until you deliberately unlock it, and it never looks like your laptop'
 
 ## Features
 
-| Area              | Today                                                                            |
-| ----------------- | -------------------------------------------------------------------------------- |
-| Connections       | PostgreSQL and hosted Postgres (Supabase, Neon, RDS, …); paste a connection URL  |
-| Explorer          | databases → schemas → tables and views (with row estimates) → columns, indexes   |
-| SQL               | run statement under cursor (⌘/Ctrl+Enter) or script (⌘/Ctrl+Shift+Enter), cancel |
-| Results           | virtualised grid for large results, several result sets, copy as TSV/JSON        |
-| Production safety | read-only by default, typed confirmation to unlock, relocks on disconnect        |
+| Area              | Today                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| Connections       | PostgreSQL and hosted Postgres (Supabase, Neon, RDS, …); paste a connection URL     |
+| Explorer          | databases → schemas → tables and views (with row estimates) → columns, indexes      |
+| SQL               | run statement under cursor (⌘/Ctrl+Enter) or script (⌘/Ctrl+Shift+Enter), cancel    |
+| Results           | virtualised grid for large results, several result sets, copy as TSV/JSON           |
+| Production safety | read-only by default, typed confirmation to unlock, relocks on disconnect           |
+| AI agents (MCP)   | agents test and save connections or fill in the form; never read passwords or write |
 
 ## Getting started
 

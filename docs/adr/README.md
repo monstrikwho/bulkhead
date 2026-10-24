@@ -11,3 +11,5 @@ A new decision gets the next number; a reversed one is marked _Superseded_ with 
 | 0003 | [Results grid: TanStack Virtual over a DOM grid](0003-results-grid.md)               |
 | 0004 | [Connections in settings, secrets in SecretStorage](0004-connection-storage.md)      |
 | 0005 | [License hygiene](0005-license-hygiene.md)                                           |
+| 0006 | [AI agents talk to Bulkhead over MCP](0006-ai-agents-over-mcp.md)                    |
+| 0007 | [AI agents may test and save connections](0007-agents-test-and-save-connections.md)  |

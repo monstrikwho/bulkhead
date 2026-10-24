@@ -63,6 +63,15 @@ the driver's `optionFields` and talks to the host with the messages in
 throwaway read-only session that lists databases) and `save`. The webview never writes settings
 or secrets; the host validates the draft with the driver and saves it.
 
+**AI agents (MCP).** `mcp/agentAccess.ts` starts `mcp/server.ts`, a stateless MCP server on
+`127.0.0.1` with a per-window token, registers it with VS Code's MCP provider API and writes an
+instance file for `mcp/bridge.ts`, the stdio bridge agents outside VS Code start (ADR 0006).
+Every tool turns the agent's values into a draft with `proposeDraft` (`core/src/agent.ts`).
+`configure_connection` opens `ConnectionFormPanel` with it, marked as filled in by an agent;
+`test_connection` and `save_connection` pass it to `connections/drafts.ts`, the code behind the
+form's Test and Save (ADR 0007). `save_connection` refuses drafts that turn off production or
+read-only.
+
 ## Storage
 
 | What                        | Where                                              | Synced          |
@@ -71,6 +80,7 @@ or secrets; the host validates the draft with the driver and saves it.
 | Passwords, keys             | `SecretStorage` (`bulkhead.connection.<id>.<key>`) | no, per machine |
 | Editor → connection binding | `workspaceState`                                   | no              |
 | Writes unlocked             | memory only                                        | no              |
+| MCP port and token          | `globalStorage/mcp/instances/<pid>.json`, mode 600 | no              |
 
 ## Extending
 

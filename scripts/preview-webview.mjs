@@ -125,7 +125,7 @@ const SCENARIOS = {
   },
   'form-edit-refused': {
     app: 'connection-form',
-    existing: {
+    start: {
       draft: {
         id: 'x',
         name: 'orders-prod',
@@ -149,6 +149,54 @@ const SCENARIOS = {
       await page.waitForSelector('.cf-test')
     },
   },
+  'form-agent-new': {
+    app: 'connection-form',
+    start: {
+      draft: {
+        name: 'shop (staging)',
+        driver: 'postgres',
+        production: false,
+        readOnly: false,
+        options: {
+          host: 'staging.db.internal',
+          port: 5432,
+          user: 'app',
+          database: 'shop',
+          ssl: 'require',
+        },
+        secrets: {},
+      },
+      savedSecrets: [],
+      proposal: { changed: [], warnings: [] },
+    },
+    steps: (page) => page.waitForSelector('.cf-agent'),
+  },
+  'form-agent-prod-off': {
+    app: 'connection-form',
+    start: {
+      draft: {
+        id: 'x',
+        name: 'orders-prod',
+        driver: 'postgres',
+        production: false,
+        readOnly: false,
+        options: {
+          host: 'orders.db.internal',
+          port: 5432,
+          user: 'writer',
+          database: 'shop',
+          ssl: 'verify-full',
+        },
+        secrets: {},
+      },
+      savedSecrets: ['password'],
+      proposal: {
+        changed: ['Environment', 'Read-only', 'User'],
+        warnings: ['Turns off Production: writes will no longer be blocked.'],
+      },
+    },
+    steps: (page) => page.waitForSelector('.cf-agent.danger'),
+  },
 }
 
 execSync('pnpm --filter @bulkhead/webview build', { cwd: root, stdio: 'ignore' })
@@ -164,8 +212,8 @@ const mock = (
 ).outputFiles[0].text
 
 const page = (name, theme) => {
-  const { app, results, existing } = SCENARIOS[name]
-  const data = { app, results, existing }
+  const { app, results, start } = SCENARIOS[name]
+  const data = { app, results, start }
   return `<!doctype html>
 <html><head><meta charset="utf-8" /><link rel="icon" href="data:," />
 <style>${themeCss(theme)}</style>

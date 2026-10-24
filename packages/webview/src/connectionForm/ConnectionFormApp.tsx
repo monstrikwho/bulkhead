@@ -26,16 +26,13 @@ export function ConnectionFormApp() {
       if (settle(message)) return
       if (message.type === 'init') {
         setDrivers(message.drivers)
-        const existing = message.existing
+        setSaveError(undefined)
+        const start = message.start
         setScreen(
-          existing
+          start
             ? {
                 name: 'form',
-                start: {
-                  entry: entryFor(existing.draft.driver, existing.draft.options.host),
-                  draft: existing.draft,
-                  savedSecrets: existing.savedSecrets,
-                },
+                start: { ...start, entry: entryFor(start.draft.driver, start.draft.options.host) },
               }
             : { name: 'picker' },
         )

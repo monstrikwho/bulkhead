@@ -2,6 +2,7 @@ import type {
   CatalogEntry,
   ConnectionDraft,
   DriverDescriptor,
+  FormStartData,
   OptionField,
   ParseResult,
   TestResult,
@@ -12,11 +13,8 @@ import { DatabaseIcon } from './DatabaseIcon'
 import { looksLikeConnectionString, parseConnectionString, testConnection } from './hostRequests'
 import { Icon } from './icons'
 
-export interface FormStart {
+export interface FormStart extends FormStartData {
   entry: CatalogEntry
-  draft: ConnectionDraft
-  /** Secret keys that already have a saved value (editing). */
-  savedSecrets: string[]
 }
 
 interface Props {
@@ -35,7 +33,7 @@ type Values = Record<string, string | boolean>
 type TestState = { status: 'idle' } | { status: 'running' } | { status: 'done'; result: TestResult }
 
 export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCancel }: Props) {
-  const { entry, draft: initial, savedSecrets } = start
+  const { entry, draft: initial, savedSecrets, proposal } = start
   const editing = initial.id !== undefined
   const [name, setName] = useState(initial.name)
   const [production, setProduction] = useState(initial.production)
@@ -144,7 +142,11 @@ export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCan
         </button>
       </header>
 
-      {entry.hint && !editing && <p className="cf-entry-hint muted">{entry.hint}</p>}
+      {proposal ? (
+        <AgentNotice proposal={proposal} editing={editing} />
+      ) : (
+        entry.hint && !editing && <p className="cf-entry-hint muted">{entry.hint}</p>
+      )}
 
       {paste.open && (
         <div className="cf-paste">
@@ -616,4 +618,36 @@ function suggestName(entry: CatalogEntry, driver: DriverDescriptor, values: Valu
   const where = [database, host].filter(Boolean).join(' @ ')
   if (entry.id !== driver.kind) return where ? `${entry.label} · ${database || host}` : entry.label
   return where || driver.displayName
+}
+
+/** The form was filled in by an AI agent: nothing is saved until the user saves it. */
+function AgentNotice({
+  proposal,
+  editing,
+}: {
+  proposal: NonNullable<FormStart['proposal']>
+  editing: boolean
+}) {
+  const warned = proposal.warnings.length > 0
+  return (
+    <div className={`cf-agent ${warned ? 'danger' : ''}`} role="status">
+      <Icon name={warned ? 'error' : 'shield'} />
+      <div>
+        <strong>Filled in by an AI agent.</strong> Check every field before saving; nothing is saved
+        until you do.
+        {editing && (
+          <div className="cf-agent-changes">
+            {proposal.changed.length
+              ? `Changed: ${proposal.changed.join(', ')}.`
+              : 'No changes to the saved connection.'}
+          </div>
+        )}
+        {proposal.warnings.map((warning) => (
+          <div key={warning} className="cf-agent-warning">
+            {warning}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }

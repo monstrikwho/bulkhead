@@ -16,6 +16,8 @@ Stages are ordered; each ends with a release. Estimates are rough and will be re
 - [ ] Publish to the Marketplace with Microsoft Entra ID (`vsce publish --azure-credential`)
       instead of `VSCE_PAT`: global Azure DevOps PATs stop working on 1 December 2026
 - [ ] SQL autocompletion from schema metadata (tables, columns, keywords)
+- [x] AI agents over MCP: list connections, fill in the connection form for the user to review,
+      test and save connections (ADR 0006, 0007). Next steps for agents are in [`docs/backlog/`](backlog/README.md)
 
 ## 0.2 — Delivery: SSH and Kubernetes
 

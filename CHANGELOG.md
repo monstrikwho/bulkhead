@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- AI agents can set up connections for you over MCP. GitHub Copilot in VS Code 1.101+ finds
+  Bulkhead by itself; for Claude Code, Cursor and other agents run **Bulkhead: Connect an AI
+  Agent…**. The agent can fill in the connection form for you to review, or test and save a
+  connection with the password you gave it; VS Code tells you when an agent added or changed
+  one. Agents never read saved passwords, run queries or unlock writes, and turning off
+  production or read-only always goes through the form with a red notice. Turn it off with
+  `bulkhead.mcp.enabled`.
+
 ## [0.2.0] - 2026-10-23
 
 ### Added

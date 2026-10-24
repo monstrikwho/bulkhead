@@ -15,6 +15,8 @@ try {
     version: process.env.VSCODE_TEST_VERSION ?? 'stable',
     extensionDevelopmentPath,
     extensionTestsPath: resolve(extensionDevelopmentPath, 'out/test/index.js'),
+    // The smoke test finds the MCP instance file in the profile's global storage.
+    extensionTestsEnv: { BULKHEAD_TEST_USER_DATA: userDataDir },
     launchArgs: [
       '--disable-extensions',
       '--skip-welcome',

@@ -45,12 +45,21 @@ export type ParseResult =
     }
   | { ok: false; message: string }
 
+export interface FormStartData {
+  /** A draft with an `id` edits that saved connection. */
+  draft: ConnectionDraft
+  /** Secret keys that already have a saved value. */
+  savedSecrets: string[]
+  /** Set when an AI agent filled the form in over MCP. */
+  proposal?: { changed: string[]; warnings: string[] }
+}
+
 export type FormHostToWebview =
   | {
       type: 'init'
       drivers: DriverDescriptor[]
-      /** The connection being edited; the form opens on the picker when absent. */
-      existing?: { draft: ConnectionDraft; savedSecrets: string[] }
+      /** What the form opens with; the picker when absent. Sent again to refill an open form. */
+      start?: FormStartData
     }
   | { type: 'test-result'; requestId: number; result: TestResult }
   /** `result` is `null` when the text is not a connection string of any driver. */

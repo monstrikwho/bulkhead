@@ -19,16 +19,18 @@ packages/core/             contracts and pure logic, shared by host and webview 
   src/catalog.ts             what the "new connection" picker offers: drivers + hosted presets
   src/connectionForm.ts      host <-> connection form webview messages, ConnectionDraft
   src/protocol.ts            host <-> results webview messages
+  src/agent.ts               what MCP agents may propose: form, test, save
   src/safety/                read-only classifier and policy
   src/sql/                   lexer and statement splitter (Postgres/ClickHouse quoting)
 packages/driver-postgres/  node-postgres driver: session, explorer, options, connection strings
 packages/extension/        everything that touches the VS Code API
   src/extension.ts           activation, commands
   src/connections/           store (settings), secrets (SecretStorage), manager (sessions),
-                             formPanel (connection form webview panel)
+                             drafts (test/save a draft), formPanel (connection form panel)
   src/explorer/tree.ts       connection tree
   src/query/                 editor bindings, query runner
   src/results/               results webview view
+  src/mcp/                   MCP server for AI agents, stdio bridge, instance discovery
   src/webview/html.ts        shared webview HTML + CSP
   src/test/                  VS Code smoke test (mocha, runs in a real VS Code)
 packages/webview/          React apps for both webviews, one bundle; body[data-app] picks the app
@@ -37,7 +39,7 @@ packages/webview/          React apps for both webviews, one bundle; body[data-a
   src/brandIcons.ts            vendored Simple Icons marks (generated, do not hand-edit)
 scripts/                   release helpers, webview preview (screenshots)
 dev/                       docker compose stand: PostgreSQL 17 on 127.0.0.1:55432
-docs/                      architecture, read-only mode, roadmap, ADRs
+docs/                      architecture, read-only mode, roadmap, ADRs, backlog/ (one md per item)
 ```
 
 ## Commands
@@ -91,6 +93,11 @@ each command's exit code; do not judge by grepping one line of the output.
 - Conventional Commits (`feat(postgres): …`, `fix(results): …`). User-visible changes go to
   `CHANGELOG.md` under **Unreleased**. Update `docs/roadmap.md`, `docs/architecture.md` and an
   ADR when the change touches them.
+- Agreed ideas that are not scheduled go to `docs/backlog/<item>.md`, one file each, listed in
+  `docs/backlog/README.md`; an item moves to `docs/roadmap.md` when a release picks it up.
+- MCP tools (`packages/extension/src/mcp/`) may list, test and save connections, but no tool may
+  return a saved secret, turn off production/read-only without the form, or unlock writes
+  (ADR 0006, 0007).
 
 ## Recipes
 
@@ -114,7 +121,7 @@ each command's exit code; do not judge by grepping one line of the output.
 - Webview panels appear in `vscode.window.tabGroups` asynchronously, with view type
   `mainThreadWebview-<viewType>`; tests must wait for them.
 - Node reports a refused `localhost` as an `AggregateError` with an empty message (IPv6 and IPv4
-  attempts). Use `describeError` from `connections/formPanel.ts` for user-facing errors.
+  attempts). Use `describeError` from `connections/drafts.ts` for user-facing errors.
 - `brandIcons.ts` is generated from the `simple-icons` package (version in its header); very dark
   brand colours are drawn with the theme foreground so they stay visible.
 
