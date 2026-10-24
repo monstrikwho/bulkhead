@@ -72,7 +72,14 @@ only when the maintainer asked for it.
 - `VSCE_PAT`: Azure DevOps personal access token of a member of the Marketplace publisher
   `bulkhead`, organization "All accessible organizations", scope Marketplace → Manage. Created
   in the Azure DevOps organization `bulkhead-oss`. Such global PATs stop working on
-  **1 December 2026**; the replacement is `vsce publish --azure-credential` with a Microsoft
-  Entra app trusted through GitHub OIDC (roadmap item).
+  **1 December 2026**. The replacement is Marketplace trusted publishing: a policy on the
+  publisher for `monstrikwho/bulkhead`, workflow `release.yml`, environment `release`, then
+  `gh variable set MARKETPLACE_OIDC --body true -R monstrikwho/bulkhead`. The workflow then runs
+  `vsce@4 publish --oidc` (needs Node 22, `id-token: write`) and ignores `VSCE_PAT`. Fallback if
+  the Marketplace has not launched it in time: Microsoft Entra ID (`--azure-credential`).
+- **Trusted publishing fails** (`TrustedPublishingNotSupportedException`, 401/403 from the token
+  exchange) → the policy is missing or does not match the repository/workflow/environment.
+  Unset the variable (`gh variable delete MARKETPLACE_OIDC -R monstrikwho/bulkhead`) to fall back
+  to the PAT while it still works.
 - `OVSX_PAT`: Open VSX access token of a member of the `bulkhead` namespace; the account has
   signed the Eclipse Foundation Open VSX Publisher Agreement.

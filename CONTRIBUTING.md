@@ -93,5 +93,7 @@ More in [docs/architecture.md](docs/architecture.md).
    - `VSCE_PAT`: an Azure DevOps personal access token of a member of the `bulkhead`
      Marketplace publisher, organization **All accessible organizations**, scope
      **Marketplace → Manage**. Global PATs are retired on 1 December 2026, see the roadmap.
+     With the repository variable `MARKETPLACE_OIDC` set to `true`, the workflow uses
+     Marketplace trusted publishing (`vsce publish --oidc`) instead and needs no token.
    - `OVSX_PAT`: an Open VSX access token of a member of the `bulkhead` namespace; the account
      must have signed the Eclipse Foundation Publisher Agreement.

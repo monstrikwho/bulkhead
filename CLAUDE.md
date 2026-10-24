@@ -131,6 +131,6 @@ each command's exit code; do not judge by grepping one line of the output.
   (EclipseFdn/open-vsx.org#14643).
 - Releases: tag `v<version>` → `.github/workflows/release.yml`, environment `release` (required
   reviewer, tags `v*` only), secrets `VSCE_PAT` and `OVSX_PAT`.
-- **Deadline:** global Azure DevOps PATs stop working on 1 December 2026. Before that, move
-  Marketplace publishing to Microsoft Entra ID (`vsce publish --azure-credential` with GitHub
-  OIDC) — tracked in `docs/roadmap.md`.
+- **Deadline:** global Azure DevOps PATs stop working on 1 December 2026. Before that, switch
+  Marketplace publishing to trusted publishing (`vsce publish --oidc`, repository variable
+  `MARKETPLACE_OIDC=true`); Microsoft Entra ID is the fallback — tracked in `docs/roadmap.md`.

@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     # Configure required reviewers on this environment so nothing ships without a human.
     environment: release
+    permissions:
+      contents: write
+      # GitHub OIDC token for Marketplace trusted publishing.
+      id-token: write
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -33,7 +37,16 @@ jobs:
       - run: pnpm lint && pnpm typecheck && pnpm test
       - run: pnpm package
 
-      - name: Publish to the VS Code Marketplace
+      # Trusted publishing (OIDC) needs no stored token; it is on once the Marketplace policy for
+      # this repository and environment exists and the repository variable MARKETPLACE_OIDC is
+      # `true`. Until then the PAT, which stops working on 1 December 2026.
+      - name: Publish to the VS Code Marketplace (trusted publishing)
+        if: vars.MARKETPLACE_OIDC == 'true'
+        working-directory: packages/extension
+        run: npx --yes @vscode/vsce@4 publish --packagePath *.vsix --no-dependencies --oidc
+
+      - name: Publish to the VS Code Marketplace (PAT)
+        if: vars.MARKETPLACE_OIDC != 'true'
         working-directory: packages/extension
         run: npx --yes @vscode/vsce@3 publish --packagePath *.vsix --no-dependencies
         env:

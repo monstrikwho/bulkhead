@@ -13,8 +13,10 @@ Stages are ordered; each ends with a release. Estimates are rough and will be re
 - [ ] Connection form: SSL certificate files, connection colour
 - [x] Marketplace icon and publisher account (`bulkhead`)
 - [ ] Screenshots for the Marketplace page
-- [ ] Publish to the Marketplace with Microsoft Entra ID (`vsce publish --azure-credential`)
-      instead of `VSCE_PAT`: global Azure DevOps PATs stop working on 1 December 2026
+- [ ] Publish to the Marketplace with trusted publishing (`vsce publish --oidc`) instead of
+      `VSCE_PAT`: global Azure DevOps PATs stop working on 1 December 2026. The workflow is
+      ready (repository variable `MARKETPLACE_OIDC`); waiting for the Marketplace to launch it
+      (microsoft/vscode-vsce#1275). Fallback: Microsoft Entra ID (`--azure-credential`)
 - [ ] SQL autocompletion from schema metadata (tables, columns, keywords)
 - [x] AI agents over MCP: list connections, fill in the connection form for the user to review,
       test and save connections (ADR 0006, 0007). Next steps for agents are in [`docs/backlog/`](backlog/README.md)
