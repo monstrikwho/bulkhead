@@ -2,7 +2,7 @@
   "name": "bulkhead",
   "displayName": "Bulkhead — Database Client",
   "description": "Open-source database client with production safety built in: read-only prod connections, secrets in SecretStorage, no account, no limits.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "preview": true,
   "publisher": "bulkhead",
   "license": "MIT",
