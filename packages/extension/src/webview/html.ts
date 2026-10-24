@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto'
 import * as vscode from 'vscode'
 
 /** Which React app the shared webview bundle renders. */
-export type WebviewApp = 'results' | 'connection-form'
+export type WebviewApp = 'results' | 'table' | 'connection-form'
 
 export function webviewRoot(extensionUri: vscode.Uri): vscode.Uri {
   return vscode.Uri.joinPath(extensionUri, 'dist', 'webview')

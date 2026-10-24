@@ -11,7 +11,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { DatabaseIcon } from './DatabaseIcon'
 import { looksLikeConnectionString, parseConnectionString, testConnection } from './hostRequests'
-import { Icon } from './icons'
+import { Icon } from '../icons'
 
 export interface FormStart extends FormStartData {
   entry: CatalogEntry

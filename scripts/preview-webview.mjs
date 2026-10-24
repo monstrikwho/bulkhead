@@ -51,6 +51,31 @@ const run = (connection, outcomes) => [
 
 /** name → page setup and the steps to reach the state. */
 const SCENARIOS = {
+  'results-welcome': {
+    app: 'results',
+    viewport: { width: 1100, height: 380 },
+    steps: (page) => page.waitForSelector('.welcome-card'),
+  },
+  'results-welcome-narrow': {
+    app: 'results',
+    viewport: { width: 520, height: 420 },
+    steps: (page) => page.waitForSelector('.welcome-card'),
+  },
+  'table-grid': {
+    app: 'table',
+    viewport: { width: 1100, height: 520 },
+    results: run({ name: 'local', database: 'shop', production: false, accessMode: 'read-write' }, [
+      {
+        kind: 'rows',
+        statement: 'select * from shop.orders',
+        columns,
+        rows: rows.slice(0, 40),
+        truncated: false,
+        durationMs: 19,
+      },
+    ]),
+    steps: (page) => page.waitForSelector('.grid-row'),
+  },
   'results-grid': {
     app: 'results',
     viewport: { width: 1100, height: 420 },

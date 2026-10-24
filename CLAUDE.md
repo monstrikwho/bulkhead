@@ -29,7 +29,7 @@ packages/extension/        everything that touches the VS Code API
                              drafts (test/save a draft), formPanel (connection form panel)
   src/explorer/tree.ts       connection tree
   src/query/                 editor bindings, query runner
-  src/results/               results webview view
+  src/results/               results webview view (bottom panel), table tabs (editor area)
   src/mcp/                   MCP server for AI agents, stdio bridge, instance discovery
   src/webview/html.ts        shared webview HTML + CSP
   src/test/                  VS Code smoke test (mocha, runs in a real VS Code)

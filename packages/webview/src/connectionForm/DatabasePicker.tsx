@@ -7,7 +7,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 
 import { DatabaseIcon } from './DatabaseIcon'
-import { Icon } from './icons'
+import { Icon } from '../icons'
 import { looksLikeConnectionString, parseConnectionString } from './hostRequests'
 
 type Detected = { text: string; result: ParseResult | null }

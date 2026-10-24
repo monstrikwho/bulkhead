@@ -5,7 +5,7 @@ import * as vscode from 'vscode'
 
 import type { ConnectionManager } from '../connections/manager'
 import { driverFor } from '../drivers'
-import type { ResultsView } from '../results/resultsView'
+import type { ResultsTarget } from '../results/channel'
 import type { EditorBindings } from './editorBindings'
 
 interface ActiveRun {
@@ -13,42 +13,50 @@ interface ActiveRun {
   controller: AbortController
 }
 
-/** Runs SQL from editors and from tree actions, one run at a time, into the results view. */
+/**
+ * Runs SQL from editors into the results panel and table queries into their tabs: one run at a
+ * time per target, so a slow table does not block the editor.
+ */
 export class QueryRunner {
-  private active: ActiveRun | undefined
+  private readonly active = new Map<ResultsTarget, ActiveRun>()
 
   constructor(
     private readonly manager: ConnectionManager,
     private readonly bindings: EditorBindings,
-    private readonly results: ResultsView,
+    private readonly results: ResultsTarget,
   ) {}
 
   /** Runs the selection, or the statement under the cursor (`scope: 'statement'`), or all. */
   async runEditor(scope: 'statement' | 'script'): Promise<void> {
     const editor = vscode.window.activeTextEditor
     if (!editor) return
-    const target = await this.bindings.resolve(editor.document)
-    if (!target) return
+    const bound = await this.bindings.resolve(editor.document)
+    if (!bound) return
 
-    const script = scriptToRun(editor, scope, target.profile)
+    const script = scriptToRun(editor, scope, bound.profile)
     if (!script.trim()) return
-    await this.run(target.profile, script, target.binding.database)
+    await this.run(bound.profile, script, bound.binding.database)
   }
 
-  async run(profile: ConnectionProfile, script: string, database?: string): Promise<void> {
-    if (this.active) {
+  async run(
+    profile: ConnectionProfile,
+    script: string,
+    database?: string,
+    target: ResultsTarget = this.results,
+  ): Promise<void> {
+    if (this.active.has(target)) {
       void vscode.window.showWarningMessage(
         vscode.l10n.t('A query is already running. Cancel it first.'),
       )
       return
     }
     const run: ActiveRun = { id: randomUUID(), controller: new AbortController() }
-    this.active = run
-    await this.results.reveal()
+    this.active.set(target, run)
+    await target.reveal()
 
     try {
       const session = await this.manager.session(profile)
-      this.results.post({
+      target.post({
         type: 'run-started',
         runId: run.id,
         connection: {
@@ -68,21 +76,24 @@ export class QueryRunner {
         database,
         signal: run.controller.signal,
       })
-      this.results.post({ type: 'run-finished', runId: run.id, outcomes, finishedAt: Date.now() })
+      target.post({ type: 'run-finished', runId: run.id, outcomes, finishedAt: Date.now() })
     } catch (error) {
       if (error instanceof vscode.CancellationError) return
       const message = error instanceof Error ? error.message : String(error)
-      this.results.post({ type: 'run-failed', runId: run.id, message, finishedAt: Date.now() })
+      target.post({ type: 'run-failed', runId: run.id, message, finishedAt: Date.now() })
       void vscode.window.showErrorMessage(vscode.l10n.t('{0}: {1}', profile.name, message))
     } finally {
-      this.active = undefined
+      this.active.delete(target)
     }
   }
 
+  /** Cancels the run with this id, or without one the run in the results panel. */
   cancel(runId?: string): void {
-    if (this.active && (runId === undefined || runId === this.active.id)) {
-      this.active.controller.abort()
-    }
+    const run =
+      runId === undefined
+        ? this.active.get(this.results)
+        : [...this.active.values()].find((active) => active.id === runId)
+    run?.controller.abort()
   }
 }
 

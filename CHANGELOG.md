@@ -15,6 +15,10 @@ All notable changes to this project are documented here. The format follows
   one. Agents never read saved passwords, run queries or unlock writes, and turning off
   production or read-only always goes through the form with a red notice. Turn it off with
   `bulkhead.mcp.enabled`.
+- Tables open in their own editor tab, one per table, with a **Refresh** button. Opening the
+  same table again brings its tab back and reloads it.
+- The Bulkhead panel starts with shortcuts: new connection, new query, open an SQL file,
+  connect an AI agent, plus documentation, issues and the changelog.
 
 ## [0.2.0] - 2026-10-23
 

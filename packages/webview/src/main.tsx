@@ -10,5 +10,11 @@ import './connectionForm/form.css'
 const app = document.body.dataset.app
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>{app === 'connection-form' ? <ConnectionFormApp /> : <App />}</StrictMode>,
+  <StrictMode>
+    {app === 'connection-form' ? (
+      <ConnectionFormApp />
+    ) : (
+      <App variant={app === 'table' ? 'table' : 'results'} />
+    )}
+  </StrictMode>,
 )

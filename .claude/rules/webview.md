@@ -13,7 +13,7 @@ paths:
 # Webviews
 
 One Vite bundle (`packages/webview` → `packages/extension/dist/webview/index.{js,css}`) serves
-every webview; the host's page sets `<body data-app="results|connection-form">` and
+every webview; the host's page sets `<body data-app="results|table|connection-form">` and
 `src/main.tsx` renders the matching app. HTML and CSP come from
 `packages/extension/src/webview/html.ts`.
 

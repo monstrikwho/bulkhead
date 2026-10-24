@@ -1,29 +1,31 @@
-import { isWebviewToHost, type HostToWebview } from '@bulkhead/core'
+import { isWebviewToHost, type HostToWebview, type WelcomeAction } from '@bulkhead/core'
 import * as vscode from 'vscode'
 
 import { webviewHtml, webviewRoot } from '../webview/html'
+import { RunChannel, type ResultsTarget } from './channel'
 
 /**
- * The results grid, a React app in the bottom panel. Messages sent before the webview is ready
- * are replayed in order once it reports `ready`, including after VS Code recreates it.
+ * The results of queries run from SQL editors, a React app in the bottom panel. Before the first
+ * run it shows a start screen whose shortcuts come back as `action` messages.
  */
-export class ResultsView implements vscode.WebviewViewProvider, vscode.Disposable {
+export class ResultsView implements vscode.WebviewViewProvider, ResultsTarget, vscode.Disposable {
   static readonly viewId = 'bulkhead.results'
 
   private view: vscode.WebviewView | undefined
-  private ready = false
-  /** Messages of the latest run only: enough to restore the view. */
-  private history: HostToWebview[] = []
+  private readonly channel = new RunChannel()
   private readonly disposables: vscode.Disposable[] = []
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly onCancel: (runId: string) => void,
+    private readonly handlers: {
+      cancel: (runId: string) => void
+      action: (action: WelcomeAction) => void
+    },
   ) {}
 
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view
-    this.ready = false
+    this.channel.attach(view.webview)
     view.webview.options = {
       enableScripts: true,
       localResourceRoots: [webviewRoot(this.extensionUri)],
@@ -35,20 +37,22 @@ export class ResultsView implements vscode.WebviewViewProvider, vscode.Disposabl
         if (!isWebviewToHost(message)) return
         switch (message.type) {
           case 'ready':
-            this.ready = true
-            for (const queued of this.history) void view.webview.postMessage(queued)
+            this.channel.markReady()
             break
           case 'cancel':
-            this.onCancel(message.runId)
+            this.handlers.cancel(message.runId)
             break
           case 'copy':
             void vscode.env.clipboard.writeText(message.text)
+            break
+          case 'action':
+            this.handlers.action(message.action)
             break
         }
       }),
       view.onDidDispose(() => {
         this.view = undefined
-        this.ready = false
+        this.channel.detach()
       }),
     )
   }
@@ -59,9 +63,7 @@ export class ResultsView implements vscode.WebviewViewProvider, vscode.Disposabl
   }
 
   post(message: HostToWebview): void {
-    if (message.type === 'run-started') this.history = []
-    this.history.push(message)
-    if (this.view && this.ready) void this.view.webview.postMessage(message)
+    this.channel.post(message)
   }
 
   dispose(): void {

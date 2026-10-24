@@ -2,7 +2,9 @@ import type { ConnectionBadge, HostToWebview, StatementOutcome } from '@bulkhead
 import { useEffect, useState } from 'react'
 
 import { ResultGrid } from './ResultGrid'
+import { Welcome } from './Welcome'
 import { toJson, toTsv } from './copy'
+import { Icon } from './icons'
 import { onMessage, post } from './vscode'
 
 type Run = {
@@ -16,7 +18,11 @@ type Run = {
   | { status: 'failed'; message: string; finishedAt: number }
 )
 
-export function App() {
+/**
+ * `results`: the bottom panel, for queries run from SQL editors. `table`: one table's data in an
+ * editor tab, which can be refreshed.
+ */
+export function App({ variant }: { variant: 'results' | 'table' }) {
   const [run, setRun] = useState<Run>()
   const [tab, setTab] = useState(0)
 
@@ -59,18 +65,11 @@ export function App() {
     return unsubscribe
   }, [])
 
-  if (!run) {
-    return (
-      <div className="empty">
-        Run a query with <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd>, or open a table from the
-        Connections view.
-      </div>
-    )
-  }
+  if (!run) return variant === 'table' ? <div className="running">Loading…</div> : <Welcome />
 
   return (
     <div className="app">
-      <Header run={run} />
+      <Header run={run} refreshable={variant === 'table'} />
       {run.status === 'running' && <div className="running">Running…</div>}
       {run.status === 'failed' && <div className="error-box">{run.message}</div>}
       {run.status === 'done' && <Outcomes outcomes={run.outcomes} tab={tab} onTab={setTab} />}
@@ -78,7 +77,7 @@ export function App() {
   )
 }
 
-function Header({ run }: { run: Run }) {
+function Header({ run, refreshable }: { run: Run; refreshable: boolean }) {
   const { connection } = run
   const unlocked = connection.accessMode === 'read-write'
   const badge = connection.production
@@ -105,7 +104,19 @@ function Header({ run }: { run: Run }) {
           </button>
         </>
       ) : (
-        <span className="muted">{formatDuration(run.finishedAt - run.startedAt)}</span>
+        <>
+          <span className="muted">{formatDuration(run.finishedAt - run.startedAt)}</span>
+          {refreshable && (
+            <button
+              type="button"
+              className="secondary icon-button"
+              onClick={() => post({ type: 'refresh' })}
+            >
+              <Icon name="refresh" />
+              Refresh
+            </button>
+          )}
+        </>
       )}
     </header>
   )

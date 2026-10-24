@@ -1,4 +1,4 @@
-import type { ConnectionProfile } from '@bulkhead/core'
+import type { ConnectionProfile, WelcomeAction } from '@bulkhead/core'
 import * as vscode from 'vscode'
 
 import { ConnectionFormPanel } from './connections/formPanel'
@@ -11,6 +11,7 @@ import { AgentAccess } from './mcp/agentAccess'
 import { EditorBindings } from './query/editorBindings'
 import { QueryRunner } from './query/runner'
 import { ResultsView } from './results/resultsView'
+import { TablePanel } from './results/tablePanel'
 
 export function activate(context: vscode.ExtensionContext): void {
   const store = new ConnectionStore()
@@ -18,7 +19,10 @@ export function activate(context: vscode.ExtensionContext): void {
   const manager = new ConnectionManager(secrets)
   const tree = new ConnectionTreeProvider(store, manager)
   const bindings = new EditorBindings(context.workspaceState, store, manager)
-  const results = new ResultsView(context.extensionUri, (runId) => queries.cancel(runId))
+  const results = new ResultsView(context.extensionUri, {
+    cancel: (runId) => queries.cancel(runId),
+    action: (action) => void welcomeAction(action),
+  })
   const queries = new QueryRunner(manager, bindings, results)
   const formDeps = { extensionUri: context.extensionUri, store, secrets, manager }
   const agents = new AgentAccess(context, formDeps)
@@ -135,9 +139,17 @@ export function activate(context: vscode.ExtensionContext): void {
       if (editor) await bindings.pick(editor.document)
     }),
 
-    command('bulkhead.node.open', async (element?: TreeElement) => {
-      if (element?.type !== 'node' || !element.node.previewQuery) return
-      await queries.run(element.profile, element.node.previewQuery, element.node.database)
+    command('bulkhead.node.open', (element?: TreeElement) => {
+      if (element?.type !== 'node') return
+      const { profile, node } = element
+      const query = node.previewQuery
+      if (!query) return
+      TablePanel.show(context.extensionUri, {
+        key: `${profile.id}/${node.id}`,
+        title: node.label,
+        load: (panel) => queries.run(profile, query, node.database, panel),
+        cancel: (runId) => queries.cancel(runId),
+      })
     }),
 
     command('bulkhead.node.copyName', async (element?: TreeElement) => {
@@ -149,6 +161,42 @@ export function activate(context: vscode.ExtensionContext): void {
 
 export function deactivate(): void {
   // Sessions are closed by ConnectionManager.dispose via context.subscriptions.
+}
+
+const REPOSITORY = 'https://github.com/monstrikwho/bulkhead'
+
+/** The shortcuts on the results panel's start screen. */
+async function welcomeAction(action: WelcomeAction): Promise<void> {
+  switch (action) {
+    case 'new-connection':
+      await vscode.commands.executeCommand('bulkhead.connection.add')
+      break
+    case 'new-query':
+      await vscode.commands.executeCommand('bulkhead.query.new')
+      break
+    case 'connect-agent':
+      await vscode.commands.executeCommand('bulkhead.mcp.connectAgent')
+      break
+    case 'open-sql-file': {
+      const [file] =
+        (await vscode.window.showOpenDialog({
+          canSelectMany: false,
+          filters: { SQL: ['sql'] },
+          openLabel: vscode.l10n.t('Open'),
+        })) ?? []
+      if (file) await vscode.window.showTextDocument(file)
+      break
+    }
+    case 'docs':
+      await vscode.env.openExternal(vscode.Uri.parse(`${REPOSITORY}#readme`))
+      break
+    case 'issues':
+      await vscode.env.openExternal(vscode.Uri.parse(`${REPOSITORY}/issues`))
+      break
+    case 'changelog':
+      await vscode.env.openExternal(vscode.Uri.parse(`${REPOSITORY}/blob/main/CHANGELOG.md`))
+      break
+  }
 }
 
 /**

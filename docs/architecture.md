@@ -49,11 +49,15 @@ place. A user disconnect clears the override, so production returns read-only.
 **Running SQL.** `QueryRunner` takes the selection, or the statement under the cursor (found
 with the core splitter), and calls `session.execute`. Drivers split scripts themselves, run
 statements one by one, stop at the first error, and return one `StatementOutcome` per statement.
-Results go to `ResultsView` as `run-started` / `run-finished` messages.
+Results go to a `ResultsTarget` as `run-started` / `run-finished` messages: the `ResultsView`
+in the bottom panel for editors, or a `TablePanel` (an editor tab per table, opened by
+**Open Data**) for tree actions. One run at a time per target.
 
 **Webview protocol.** Plain JSON messages typed in `core/src/protocol.ts`. The host keeps the
 messages of the last run and replays them when the webview (re)loads and reports `ready`.
-Messages from the webview are validated with `isWebviewToHost` before use.
+Messages from the webview are validated with `isWebviewToHost` before use. The start screen
+of the results panel sends `action` messages from a fixed list (`welcomeActions`); the host maps
+each to a command or a link, so the webview cannot run arbitrary commands.
 
 **Connection form.** `bulkhead.connection.add` and `.edit` open `ConnectionFormPanel`, a webview in
 the editor area rendered by the same bundle as the results (the page's `data-app` picks the app).

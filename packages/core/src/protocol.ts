@@ -21,15 +21,35 @@ export type HostToWebview =
   | { type: 'run-finished'; runId: string; outcomes: StatementOutcome[]; finishedAt: number }
   | { type: 'run-failed'; runId: string; message: string; finishedAt: number }
 
+/** Shortcuts on the results panel's start screen; the host decides what each one does. */
+export const welcomeActions = [
+  'new-connection',
+  'new-query',
+  'open-sql-file',
+  'connect-agent',
+  'docs',
+  'issues',
+  'changelog',
+] as const
+export type WelcomeAction = (typeof welcomeActions)[number]
+
 export type WebviewToHost =
-  { type: 'ready' } | { type: 'cancel'; runId: string } | { type: 'copy'; text: string }
+  | { type: 'ready' }
+  | { type: 'cancel'; runId: string }
+  | { type: 'copy'; text: string }
+  /** Run the same query again (table tabs). */
+  | { type: 'refresh' }
+  | { type: 'action'; action: WelcomeAction }
 
 export function isWebviewToHost(value: unknown): value is WebviewToHost {
   if (typeof value !== 'object' || value === null) return false
   const message = value as Record<string, unknown>
   switch (message.type) {
     case 'ready':
+    case 'refresh':
       return true
+    case 'action':
+      return (welcomeActions as readonly unknown[]).includes(message.action)
     case 'cancel':
       return typeof message.runId === 'string'
     case 'copy':
