@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@bulkhead/core": "workspace:*",
-    "@tanstack/react-virtual": "^3.14.22",
+    "@tanstack/react-virtual": "^3.14.23",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
