@@ -96,6 +96,9 @@ interface RelationRow {
   relname: string
   relkind: string
   estimate: string | null
+  /** JSON array of the columns the current role may SELECT, in table order. */
+  readable: string
+  columns: string
 }
 
 async function listRelations(
@@ -107,9 +110,20 @@ async function listRelations(
     database,
     `select c.oid::text as oid, c.relname, c.relkind,
             case when c.relkind in ('r', 'p', 'm', 'f') and c.reltuples >= 0
-                 then c.reltuples::bigint::text end as estimate
+                 then c.reltuples::bigint::text end as estimate,
+            coalesce(array_to_json(cols.readable), '[]')::text as readable,
+            coalesce(cols.columns, 0)::text as columns
        from pg_class c
        join pg_namespace n on n.oid = c.relnamespace
+       -- Column grants: a role may read some columns of a table and not others, and SELECT *
+       -- then fails with "permission denied". Open data asks only for what it may read.
+       left join lateral (
+         select array_agg(a.attname::text order by a.attnum)
+                  filter (where has_column_privilege(c.oid, a.attnum, 'SELECT')) as readable,
+                count(*)::int as columns
+           from pg_attribute a
+          where a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+       ) cols on true
       where n.nspname = $1 and c.relkind in ('r', 'p', 'f', 'v', 'm') and not c.relispartition
       order by c.relkind in ('v', 'm'), c.relname`,
     [schema],
@@ -121,17 +135,39 @@ async function listRelations(
       id: `db:${database}/rel:${row.oid}`,
       kind,
       label: row.relname,
-      description:
-        row.estimate === null ? undefined : `≈ ${formatCount(Number(row.estimate))} rows`,
+      ...(row.estimate === null
+        ? {}
+        : { description: `≈ ${formatCount(Number(row.estimate))} rows` }),
       tooltip: row.estimate === null ? kind : `${kind} · estimated rows from pg_class.reltuples`,
       icon,
       expandable: true,
       database,
       qualifiedName,
-      previewQuery: `SELECT * FROM ${qualifiedName}`,
+      ...preview(
+        { readable: JSON.parse(row.readable) as string[], columns: Number(row.columns) },
+        qualifiedName,
+      ),
       context: { schema, oid: row.oid },
     }
   })
+}
+
+/** `SELECT *` when every column is readable, else the readable ones and a notice. */
+export function preview(
+  { readable, columns }: { readable: string[]; columns: number },
+  qualifiedName: string,
+): Pick<ExplorerNode, 'previewQuery' | 'previewNotice'> {
+  if (readable.length === columns) return { previewQuery: `SELECT * FROM ${qualifiedName}` }
+  if (readable.length === 0) {
+    return {
+      previewNotice: `No readable columns: your role has no SELECT privilege on any column of ${qualifiedName}.`,
+    }
+  }
+  const hidden = columns - readable.length
+  return {
+    previewQuery: `SELECT ${readable.map(quoteIdentifier).join(', ')} FROM ${qualifiedName}`,
+    previewNotice: `${hidden} ${hidden === 1 ? 'column' : 'columns'} hidden: no SELECT privilege.`,
+  }
 }
 
 function relationFolders(relation: ExplorerNode): ExplorerNode[] {
@@ -218,7 +254,7 @@ async function listIndexes(
     id: `${parentId}/${row.name}`,
     kind: 'index',
     label: row.name,
-    description: row.primary ? 'primary key' : row.unique ? 'unique' : undefined,
+    ...(row.primary || row.unique ? { description: row.primary ? 'primary key' : 'unique' } : {}),
     tooltip: row.definition,
     icon: row.primary ? 'key' : 'list-tree',
     expandable: false,

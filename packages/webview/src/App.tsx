@@ -12,6 +12,7 @@ type Run = {
   connection: ConnectionBadge
   script: string
   startedAt: number
+  notice?: string
 } & (
   | { status: 'running' }
   | { status: 'done'; outcomes: StatementOutcome[]; finishedAt: number }
@@ -70,6 +71,11 @@ export function App({ variant }: { variant: 'results' | 'table' }) {
   return (
     <div className="app">
       <Header run={run} refreshable={variant === 'table'} />
+      {run.notice && (
+        <div className="notice" role="note">
+          {run.notice}
+        </div>
+      )}
       {run.status === 'running' && <div className="running">Running…</div>}
       {run.status === 'failed' && <div className="error-box">{run.message}</div>}
       {run.status === 'done' && <Outcomes outcomes={run.outcomes} tab={tab} onTab={setTab} />}

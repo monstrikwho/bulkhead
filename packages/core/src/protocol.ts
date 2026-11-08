@@ -17,6 +17,8 @@ export type HostToWebview =
       connection: ConnectionBadge
       script: string
       startedAt: number
+      /** Shown above the results, e.g. columns hidden for lack of privileges. */
+      notice?: string
     }
   | { type: 'run-finished'; runId: string; outcomes: StatementOutcome[]; finishedAt: number }
   | { type: 'run-failed'; runId: string; message: string; finishedAt: number }

@@ -11,7 +11,10 @@ const url = new URL(
   process.env.BULKHEAD_PG_URL ?? 'postgres://bulkhead:bulkhead@127.0.0.1:55432/bulkhead',
 )
 
-async function connect(accessMode: AccessMode): Promise<DriverSession> {
+async function connect(
+  accessMode: AccessMode,
+  login = { user: decodeURIComponent(url.username), password: decodeURIComponent(url.password) },
+): Promise<DriverSession> {
   const profile = parseConnectionProfile({
     id: `test-${accessMode}`,
     name: 'test',
@@ -21,7 +24,7 @@ async function connect(accessMode: AccessMode): Promise<DriverSession> {
       host: url.hostname,
       port: Number(url.port),
       database: url.pathname.slice(1),
-      user: decodeURIComponent(url.username),
+      user: login.user,
     },
   })
   const options = postgresDriver.parseOptions(profile.options)
@@ -29,7 +32,7 @@ async function connect(accessMode: AccessMode): Promise<DriverSession> {
     profile,
     options,
     endpoint: postgresDriver.target(options),
-    secrets: { password: decodeURIComponent(url.password) },
+    secrets: { password: login.password },
     accessMode,
   })
 }
@@ -212,6 +215,87 @@ describe('explorer', () => {
     expect(columns[0]).toMatchObject({ label: 'id', icon: 'key', description: 'bigint · not null' })
     const indexes = await reader.listChildren(indexesFolder)
     expect(indexes.map((n) => n.description)).toEqual(['primary key', 'unique'])
+  })
+
+  it('leaves optional fields out instead of setting them to undefined', async () => {
+    // Orca's panel bridge refuses a reply with an explicit `undefined` anywhere in it.
+    const databases = await reader.listChildren()
+    const database = databases.find((n) => n.label === url.pathname.slice(1))!
+    const schema = (await reader.listChildren(database)).find((n) => n.label === 'shop')!
+    const relations = await reader.listChildren(schema)
+    const view = relations.find((n) => n.kind === 'view')!
+    expect(Object.keys(view)).not.toContain('description')
+    const [, indexesFolder] = await reader.listChildren(relations[0])
+    const nodes = [databases, relations, await reader.listChildren(indexesFolder)].flat()
+    for (const node of nodes) {
+      for (const [key, value] of Object.entries(node)) {
+        expect(value, `${node.id}.${key}`).not.toBeUndefined()
+      }
+    }
+  })
+})
+
+describe('column privileges', () => {
+  // Production roles often may read only some columns (secrets revoked); SELECT * then fails.
+  const role = 'bulkhead_columns'
+  let limited: DriverSession
+
+  beforeAll(async () => {
+    await run(
+      writer,
+      `drop role if exists ${role};
+       create role ${role} login password '${role}';
+       grant usage on schema shop to ${role};
+       grant select (id, email) on shop.customers to ${role};`,
+    )
+    limited = await connect('read-only', { user: role, password: role })
+  })
+
+  afterAll(async () => {
+    await limited?.close()
+    await run(writer, `drop owned by ${role}; drop role if exists ${role}`)
+  })
+
+  async function relations() {
+    const databases = await limited.listChildren()
+    const database = databases.find((n) => n.label === url.pathname.slice(1))!
+    const schema = (await limited.listChildren(database)).find((n) => n.label === 'shop')!
+    return limited.listChildren(schema)
+  }
+
+  it('opens data with the readable columns only and says how many are hidden', async () => {
+    const customers = (await relations()).find((n) => n.label === 'customers')!
+    expect(customers.previewQuery).toBe('SELECT "id", "email" FROM "shop"."customers"')
+    expect(customers.previewNotice).toBe('2 columns hidden: no SELECT privilege.')
+
+    const [denied] = await run(limited, 'SELECT * FROM "shop"."customers"')
+    expect(denied).toMatchObject({ kind: 'error', code: '42501' })
+    const [outcome] = await run(limited, customers.previewQuery!)
+    expect(outcome?.kind).toBe('rows')
+    if (outcome?.kind === 'rows')
+      expect(outcome.columns.map((c) => c.name)).toEqual(['id', 'email'])
+  })
+
+  it('says so when the role may read no column at all', async () => {
+    const orders = (await relations()).find((n) => n.label === 'orders')!
+    expect(orders.previewQuery).toBeUndefined()
+    expect(orders.previewNotice).toBe(
+      'No readable columns: your role has no SELECT privilege on any column of "shop"."orders".',
+    )
+  })
+
+  it('keeps SELECT * where every column is readable', async () => {
+    const own = (
+      await reader.listChildren(
+        (
+          await reader.listChildren(
+            (await reader.listChildren()).find((n) => n.label === url.pathname.slice(1)),
+          )
+        ).find((n) => n.label === 'shop'),
+      )
+    ).find((n) => n.label === 'customers')!
+    expect(own.previewQuery).toBe('SELECT * FROM "shop"."customers"')
+    expect(own).not.toHaveProperty('previewNotice')
   })
 })
 

@@ -148,6 +148,12 @@ kbd {
   gap: 4px;
   overflow: auto;
 }
+.notice {
+  margin: 0;
+  padding: 4px 12px;
+  color: var(--vscode-descriptionForeground);
+  border-bottom: 1px solid var(--border);
+}
 .error-box.blocked {
   border-left-color: var(--vscode-charts-red, #e51400);
 }

@@ -180,11 +180,15 @@ export function activate(context: vscode.ExtensionContext): void {
       if (element?.type !== 'node') return
       const { profile, node } = element
       const query = node.previewQuery
-      if (!query) return
+      if (!query) {
+        // E.g. a role that may read no column of the table: say why nothing opens.
+        if (node.previewNotice) void vscode.window.showWarningMessage(node.previewNotice)
+        return
+      }
       TablePanel.show(context.extensionUri, {
         key: `${profile.id}/${node.id}`,
         title: node.label,
-        load: (panel) => queries.run(profile, query, node.database, panel),
+        load: (panel) => queries.run(profile, query, node.database, panel, node.previewNotice),
         cancel: (runId) => queries.cancel(runId),
       })
     }),

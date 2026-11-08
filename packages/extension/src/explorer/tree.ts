@@ -144,7 +144,11 @@ function nodeItem(profile: ConnectionProfile, node: ExplorerNode): vscode.TreeIt
   item.description = node.description
   item.tooltip = node.tooltip
   if (node.icon) item.iconPath = new vscode.ThemeIcon(node.icon)
-  item.contextValue = ['node', node.kind, node.previewQuery ? 'previewable' : '']
+  item.contextValue = [
+    'node',
+    node.kind,
+    node.previewQuery || node.previewNotice ? 'previewable' : '',
+  ]
     .filter(Boolean)
     .join('|')
   return item

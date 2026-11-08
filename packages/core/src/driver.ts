@@ -52,6 +52,11 @@ export interface ExplorerNode {
   qualifiedName?: string
   /** Query that shows the node's data, e.g. `SELECT * FROM "public"."users"`. */
   previewQuery?: string
+  /**
+   * What the user should know about that data, shown above it: e.g. columns left out because
+   * the role may not read them. Without `previewQuery` it says why there is nothing to show.
+   */
+  previewNotice?: string
   /** Driver-private data needed to list children. */
   context?: Readonly<Record<string, string>>
 }

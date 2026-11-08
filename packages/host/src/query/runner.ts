@@ -42,6 +42,7 @@ export class QueryRunner {
     script: string,
     database?: string,
     target: ResultsTarget = this.options.results,
+    notice?: string,
   ): Promise<void> {
     const { ui, t } = this.options
     if (this.active.has(target)) {
@@ -65,6 +66,7 @@ export class QueryRunner {
         },
         script,
         startedAt: Date.now(),
+        ...(notice ? { notice } : {}),
       })
       const outcomes = await session.execute(script, {
         maxRows: this.options.maxRows(),
