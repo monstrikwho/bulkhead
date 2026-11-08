@@ -1,0 +1,80 @@
+{
+  "manifestVersion": 2,
+  "id": "bulkhead",
+  "name": "Bulkhead",
+  "version": "0.0.0",
+  "description": "Database client with production safety: production connections stay read-only until you unlock them by typing their name. PostgreSQL, SSH tunnels, MCP for AI agents.",
+  "license": "MIT",
+  "repository": "https://github.com/monstrikwho/bulkhead",
+  "homepage": "https://github.com/monstrikwho/bulkhead",
+  "engines": {
+    "orca": ">=1.4.248"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "main": "worker.mjs",
+  "capabilities": [
+    {
+      "kind": "storage:own"
+    },
+    {
+      "kind": "secrets:own"
+    },
+    {
+      "kind": "notifications:show"
+    },
+    {
+      "kind": "workspace:read"
+    },
+    {
+      "kind": "workspace:write"
+    }
+  ],
+  "contributes": {
+    "panels": [
+      {
+        "id": "bulkhead",
+        "title": "Bulkhead",
+        "icon": "database",
+        "entry": "panel/index.html",
+        "ui": "html"
+      }
+    ],
+    "commands": [
+      {
+        "id": "bulkhead.connectAgent",
+        "title": "Bulkhead: Connect an AI Agent"
+      }
+    ],
+    "statusBarItems": [
+      {
+        "id": "status",
+        "text": "Bulkhead",
+        "icon": "database",
+        "tooltip": "Bulkhead",
+        "command": "bulkhead.connectAgent"
+      }
+    ],
+    "customEditors": [
+      {
+        "id": "console",
+        "title": "Bulkhead console",
+        "extensions": [".bhsql"],
+        "entry": "panel/console.html"
+      },
+      {
+        "id": "table",
+        "title": "Bulkhead table",
+        "extensions": [".bhtable"],
+        "entry": "panel/table.html"
+      }
+    ],
+    "newFiles": [
+      {
+        "id": "console",
+        "title": "New Bulkhead SQL console",
+        "extension": ".bhsql"
+      }
+    ]
+  }
+}

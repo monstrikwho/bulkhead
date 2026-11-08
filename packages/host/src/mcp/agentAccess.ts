@@ -21,6 +21,7 @@ import {
 import { driverFor, drivers } from '../drivers'
 import { Emitter, type Disposable } from '../events'
 import type { HostUi } from '../ports'
+import { describeConnection } from '../connections/profiles'
 import { removeInstance, writeInstance } from './discovery'
 import {
   startMcpServer,
@@ -41,6 +42,8 @@ export interface AgentAccessOptions {
   bridgeSource: string
   /** The host's version, reported to agents. */
   version: string
+  /** The editor agents are told about; "VS Code" by default. */
+  hostName?: string
   /** Folders open in this window, so the bridge picks the window an agent works in. */
   workspaceFolders(): string[]
 }
@@ -65,6 +68,10 @@ export class AgentAccess implements Disposable {
   constructor(private readonly options: AgentAccessOptions) {
     this.instances = join(options.storageDir, 'instances')
     this.bridgePath = join(options.storageDir, 'bridge.js')
+  }
+
+  private get hostName(): string {
+    return this.options.hostName ?? 'VS Code'
   }
 
   /** The running server, if any. */
@@ -106,7 +113,7 @@ export class AgentAccess implements Disposable {
       // The bridge path must not change with the extension version: agents keep it in config.
       await mkdir(this.options.storageDir, { recursive: true, mode: 0o700 })
       await copyFile(this.options.bridgeSource, this.bridgePath)
-      this.server = await startMcpServer(this.tools(), this.options.version)
+      this.server = await startMcpServer(this.tools(), this.options.version, this.hostName)
       this.writeInstance()
       this.changed.fire()
     } catch (error) {
@@ -137,8 +144,8 @@ export class AgentAccess implements Disposable {
 
         const lines = [
           existing
-            ? `Opened the form of "${existing.name}" in VS Code with your changes.`
-            : 'Opened the new connection form in VS Code, filled in.',
+            ? `Opened the form of "${existing.name}" in ${this.hostName} with your changes.`
+            : `Opened the new connection form in ${this.hostName}, filled in.`,
           'Nothing is saved yet: the user checks the fields, types the password if needed and ' +
             'saves. Tell them so; call list_connections later to see the result.',
         ]
@@ -223,8 +230,7 @@ export class AgentAccess implements Disposable {
 function summarize(profile: ConnectionProfile): ConnectionSummary {
   let target: string
   try {
-    const driver = driverFor(profile.driver)
-    target = driver.describe(driver.parseOptions(profile.options))
+    target = describeConnection(profile)
   } catch (error) {
     target = `invalid: ${describeError(error)}`
   }

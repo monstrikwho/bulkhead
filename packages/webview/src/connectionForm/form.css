@@ -7,7 +7,9 @@ body[data-app='connection-form'] #root {
   min-height: 100%;
 }
 
-body[data-app='connection-form'] {
+/* `.oa-form`: the same form inside the Orca panel. */
+body[data-app='connection-form'],
+.oa-form {
   --cf-radius: 6px;
   --cf-border: var(--vscode-widget-border, var(--vscode-panel-border, rgba(128, 128, 128, 0.35)));
   --cf-surface: var(--vscode-sideBar-background, var(--vscode-editorWidget-background));
@@ -193,16 +195,22 @@ body[data-app='connection-form'] {
 
 .cf-header {
   display: flex;
+  /* In a narrow sidebar (the Orca panel) the import link drops below instead of squeezing the name. */
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 8px 14px;
   padding: 20px 24px;
   border-bottom: 1px solid var(--cf-border);
 }
 .cf-title {
+  flex: 1 1 180px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+}
+.cf-header .cf-link {
+  white-space: nowrap;
 }
 .cf-title h1 {
   margin: 0;
@@ -213,6 +221,8 @@ body[data-app='connection-form'] {
   white-space: nowrap;
 }
 .cf-prod-badge {
+  display: inline-block;
+  white-space: nowrap;
   margin-left: 8px;
   padding: 1px 6px;
   border-radius: 3px;
@@ -532,5 +542,8 @@ body[data-app='connection-form'] {
   }
   .cf-label {
     padding-top: 0;
+  }
+  .cf-header {
+    padding: 14px 12px;
   }
 }

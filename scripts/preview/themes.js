@@ -90,3 +90,63 @@ export function themeCss(name) {
     .join('\n  ')
   return `html {\n  ${vars}\n}`
 }
+
+/**
+ * The `--orca-*` design tokens an Orca panel gets, sampled from Orca's light and dark themes.
+ * Orca writes them into `<style id="orca-design-tokens">:root{…}</style>` and puts `light` or
+ * `dark` on <html>; the panel maps them to `--vscode-*` itself (packages/webview/src/orca).
+ */
+export const ORCA_THEMES = {
+  dark: {
+    background: '#0a0a0a',
+    foreground: '#f0f0f0',
+    card: '#171717',
+    'card-foreground': '#f0f0f0',
+    popover: '#171717',
+    'popover-foreground': '#f0f0f0',
+    primary: '#e5e5e5',
+    'primary-foreground': '#171717',
+    secondary: '#262626',
+    'secondary-foreground': '#f0f0f0',
+    muted: '#262626',
+    'muted-foreground': '#acacac',
+    accent: '#404040',
+    'accent-foreground': '#f0f0f0',
+    destructive: '#ff6568',
+    'destructive-foreground': '#450a0a',
+    border: '#ffffff12',
+    input: '#ffffff26',
+    ring: '#737373',
+    radius: '.625rem',
+  },
+  light: {
+    background: '#fff',
+    foreground: '#0a0a0a',
+    card: '#fff',
+    'card-foreground': '#0a0a0a',
+    popover: '#fff',
+    'popover-foreground': '#0a0a0a',
+    primary: '#171717',
+    'primary-foreground': '#fafafa',
+    secondary: '#f5f5f5',
+    'secondary-foreground': '#171717',
+    muted: '#f5f5f5',
+    'muted-foreground': '#696969',
+    accent: '#f5f5f5',
+    'accent-foreground': '#171717',
+    destructive: '#e40014',
+    'destructive-foreground': '#fff',
+    border: '#e5e5e5',
+    input: '#e5e5e5',
+    ring: '#a1a1a1',
+    radius: '.625rem',
+  },
+}
+
+/** What Orca injects into a panel document, without the `<style>` tag. */
+export function orcaThemeCss(name) {
+  const vars = Object.entries(ORCA_THEMES[name])
+    .map(([key, value]) => `--orca-${key}:${value}`)
+    .join(';')
+  return `:root{${vars}}:where(html.light){color-scheme:light}:where(html.dark){color-scheme:dark}`
+}

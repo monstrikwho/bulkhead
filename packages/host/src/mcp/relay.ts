@@ -26,8 +26,8 @@ export async function relay(
           failure(
             id,
             -32000,
-            'Bulkhead is not running. Open VS Code with the Bulkhead extension installed, ' +
-              'ideally on the folder this agent works in.',
+            'Bulkhead is not running. Open VS Code with the Bulkhead extension, or Orca with ' +
+              'the Bulkhead plugin, ideally on the folder this agent works in.',
           ),
         ]
   }

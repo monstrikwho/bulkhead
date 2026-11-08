@@ -39,20 +39,22 @@ export interface RunningMcpServer {
   close(): Promise<void>
 }
 
-const INSTRUCTIONS =
-  "Bulkhead is the database client in the user's VS Code. You can list the saved connections, " +
-  'test and save new ones or changes, with the credentials the user gave you, or open them in ' +
+const instructions = (hostName: string) =>
+  `Bulkhead is the database client in the user's ${hostName}. You can list the saved ` +
+  'connections, test and save new ones or changes, with the credentials the user gave you, or open them in ' +
   'the connection form for the user to review. You cannot read saved passwords, run queries, ' +
   'turn off production or read-only protection without the form, or unlock writes on production.'
 
 /**
- * The MCP server of one VS Code window: Streamable HTTP on 127.0.0.1, a random port and a
+ * The MCP server of one editor window: Streamable HTTP on 127.0.0.1, a random port and a
  * random bearer token per window. Stateless: every POST gets a fresh server, there is no
  * session to hijack and nothing to clean up.
  */
 export async function startMcpServer(
   tools: AgentTools,
   version: string,
+  /** The editor agents are told about, e.g. "VS Code" or "Orca". */
+  hostName = 'VS Code',
 ): Promise<RunningMcpServer> {
   const token = randomBytes(32).toString('base64url')
   const expected = Buffer.from(`Bearer ${token}`)
@@ -84,7 +86,7 @@ export async function startMcpServer(
       return reply(response, 405, 'Method not allowed')
     }
 
-    const server = buildServer(tools, version)
+    const server = buildServer(tools, version, hostName)
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,
@@ -115,8 +117,11 @@ export async function startMcpServer(
   }
 }
 
-function buildServer(tools: AgentTools, version: string): McpServer {
-  const server = new McpServer({ name: 'bulkhead', version }, { instructions: INSTRUCTIONS })
+function buildServer(tools: AgentTools, version: string, hostName: string): McpServer {
+  const server = new McpServer(
+    { name: 'bulkhead', version },
+    { instructions: instructions(hostName) },
+  )
 
   server.registerTool(
     'list_connections',
@@ -146,8 +151,8 @@ function buildServer(tools: AgentTools, version: string): McpServer {
     {
       title: 'Prepare a database connection',
       description:
-        'Opens the Bulkhead connection form in VS Code filled in with these values, for a new ' +
-        'connection or a change to a saved one (connectionId). Nothing is saved by this call: ' +
+        `Opens the Bulkhead connection form in ${hostName} filled in with these values, for a ` +
+        'new connection or a change to a saved one (connectionId). Nothing is saved by this call: ' +
         'the user reviews the form, tests and saves it. Use save_connection to save directly. ' +
         'Mark anything that must not be broken as production. ' +
         options,
@@ -178,7 +183,7 @@ function buildServer(tools: AgentTools, version: string): McpServer {
       title: 'Save a database connection',
       description:
         'Saves a new connection, or changes to a saved one (connectionId), without opening the ' +
-        'form; returns its id. Secrets go to VS Code SecretStorage. Test it first with ' +
+        `form; returns its id. Secrets go to ${hostName} secret storage. Test it first with ` +
         'test_connection. Mark anything that must not be broken as production. Turning off ' +
         'production or read-only is refused here: use configure_connection so the user ' +
         'confirms it. ' +

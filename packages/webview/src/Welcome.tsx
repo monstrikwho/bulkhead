@@ -1,7 +1,7 @@
 import type { WelcomeAction } from '@bulkhead/core'
 
 import { Icon, type IconName } from './icons'
-import { post } from './vscode'
+import { hostActions, post, tableHint } from './vscode'
 
 const CARDS: { action: WelcomeAction; icon: IconName; label: string; primary?: boolean }[] = [
   { action: 'new-connection', icon: 'plus', label: 'New Connection', primary: true },
@@ -22,7 +22,7 @@ export function Welcome() {
   return (
     <div className="welcome">
       <div className="welcome-cards">
-        {CARDS.map((card) => (
+        {CARDS.filter((card) => hostActions.includes(card.action)).map((card) => (
           <button
             type="button"
             key={card.action}
@@ -50,8 +50,7 @@ export function Welcome() {
         ))}
       </div>
       <p className="welcome-hint">
-        Run a query with <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd>. Tables open in their own
-        tab from the Connections view.
+        Run a query with <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd>. {tableHint}
       </p>
     </div>
   )

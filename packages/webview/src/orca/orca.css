@@ -1,0 +1,375 @@
+/*
+ * Orca panels get `--orca-*` theme variables (and a `light`/`dark` class on <html>) instead of
+ * VS Code's. Map every `--vscode-*` the apps use, so the shared CSS stays the only styling.
+ * Set on :root, where the shared CSS derives its own variables (--surface, --border), for the
+ * sidebar (`orca`) and the editor tabs (`orca-console`, `orca-table`).
+ * Production red comes from `--orca-destructive` through `--vscode-errorForeground`.
+ */
+:root:has(> body[data-app^='orca']) {
+  --vscode-font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --vscode-font-size: 13px;
+  --vscode-editor-font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --vscode-editor-font-size: 12px;
+  --vscode-foreground: var(--orca-foreground);
+  --vscode-descriptionForeground: var(--orca-muted-foreground);
+  --vscode-icon-foreground: var(--orca-foreground);
+  --vscode-focusBorder: var(--orca-ring);
+  --vscode-errorForeground: var(--orca-destructive);
+  --vscode-charts-red: var(--orca-destructive);
+  --vscode-editorWarning-foreground: var(--orca-destructive);
+  --vscode-testing-iconPassed: #3fb950;
+  --vscode-textLink-foreground: var(--orca-primary);
+  --vscode-textLink-activeForeground: var(--orca-primary);
+  --vscode-editor-background: var(--orca-background);
+  --vscode-sideBar-background: var(--orca-background);
+  --vscode-panel-background: var(--orca-background);
+  --vscode-editorWidget-background: var(--orca-card);
+  --vscode-panel-border: var(--orca-border);
+  --vscode-widget-border: var(--orca-border);
+  --vscode-editorLineNumber-foreground: var(--orca-muted-foreground);
+  --vscode-debugTokenExpression-number: var(--orca-primary);
+  --vscode-button-background: var(--orca-primary);
+  --vscode-button-foreground: var(--orca-primary-foreground);
+  --vscode-button-hoverBackground: color-mix(in srgb, var(--orca-primary) 85%, transparent);
+  --vscode-button-border: transparent;
+  --vscode-button-secondaryBackground: var(--orca-secondary);
+  --vscode-button-secondaryForeground: var(--orca-secondary-foreground);
+  --vscode-button-secondaryHoverBackground: var(--orca-accent);
+  --vscode-toolbar-hoverBackground: var(--orca-accent);
+  --vscode-list-hoverBackground: var(--orca-accent);
+  --vscode-list-activeSelectionBackground: var(--orca-accent);
+  --vscode-list-activeSelectionForeground: var(--orca-accent-foreground);
+  --vscode-input-background: var(--orca-background);
+  --vscode-input-foreground: var(--orca-foreground);
+  --vscode-input-border: var(--orca-input);
+  --vscode-input-placeholderForeground: var(--orca-muted-foreground);
+  --vscode-inputValidation-infoBackground: var(--orca-muted);
+  --vscode-inputValidation-infoBorder: var(--orca-border);
+  --vscode-inputValidation-errorBackground: color-mix(
+    in srgb,
+    var(--orca-destructive) 15%,
+    transparent
+  );
+  --vscode-badge-background: var(--orca-muted);
+  --vscode-badge-foreground: var(--orca-foreground);
+  --vscode-statusBarItem-warningBackground: var(--orca-muted);
+  --vscode-statusBarItem-warningForeground: var(--orca-foreground);
+  --vscode-statusBarItem-errorBackground: var(--orca-destructive);
+  --vscode-statusBarItem-errorForeground: var(--orca-destructive-foreground);
+}
+
+.oa-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.oa-form {
+  height: 100%;
+  overflow: auto;
+}
+/* A sidebar is narrow; form.css already stacks labels below 560px. */
+.oa-form .cf-page {
+  padding: 12px 10px 24px;
+}
+
+.oa-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.oa-pad {
+  padding: 6px 10px;
+  margin: 0;
+}
+
+.oa-tree {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.oa-welcome {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.oa-tree,
+.oa-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.oa-row {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  padding-right: 4px;
+}
+.oa-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+.oa-row.selected {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+.oa-row.invalid {
+  color: var(--vscode-errorForeground);
+  padding: 2px 10px;
+  gap: 4px;
+}
+.oa-connection.production > .oa-row {
+  box-shadow: inset 3px 0 0 var(--vscode-errorForeground);
+}
+/* Only the connection's own row is red; the tree below it reads like any other, as in VS Code. */
+.oa-connection.production > .oa-row .oa-name {
+  color: var(--vscode-errorForeground);
+  font-weight: 600;
+}
+
+.oa-row button.oa-twisty,
+.oa-row span.oa-twisty {
+  flex: none;
+  width: 16px;
+  height: 20px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  background: none;
+  border: none;
+}
+.oa-twisty svg {
+  transition: transform 0.1s;
+}
+.oa-twisty svg.open {
+  transform: rotate(90deg);
+}
+.oa-row button.oa-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+  color: inherit;
+  background: none;
+  border: none;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.oa-name {
+  /* The name gives way last: the address beside it shrinks first. */
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.oa-desc {
+  flex: 0 100 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+.oa-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--vscode-descriptionForeground);
+}
+.oa-dot.on {
+  background: var(--vscode-testing-iconPassed);
+  border-color: var(--vscode-testing-iconPassed);
+}
+.oa-prod {
+  flex: none;
+}
+.oa-actions {
+  display: none;
+  gap: 2px;
+}
+.oa-row:hover .oa-actions,
+.oa-row:focus-within .oa-actions,
+.oa-row.selected .oa-actions {
+  display: inline-flex;
+}
+
+button.oa-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 3px;
+}
+button.oa-icon:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.oa-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 6px 28px;
+}
+button.danger {
+  color: var(--vscode-statusBarItem-errorForeground);
+  background: var(--vscode-errorForeground);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.oa-agents {
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.oa-console.production {
+  box-shadow: inset 0 2px 0 var(--vscode-errorForeground);
+}
+.oa-console-bar {
+  flex-wrap: nowrap;
+  padding: 4px 8px;
+}
+.oa-select {
+  min-width: 0;
+  max-width: 50%;
+  padding: 2px 4px;
+  font: inherit;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 3px;
+}
+.oa-console.production .oa-select {
+  color: var(--vscode-errorForeground);
+  font-weight: 600;
+}
+button.oa-run {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.oa-editor {
+  flex: none;
+  resize: vertical;
+  min-height: 72px;
+  height: 30vh;
+  margin: 0;
+  padding: 6px 8px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  outline: none;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+}
+.oa-editor:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--vscode-focusBorder);
+}
+
+.oa-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 2px 4px 2px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.oa-error > svg {
+  flex: none;
+  color: var(--vscode-errorForeground);
+}
+/* One line; the whole message is in the tooltip. */
+.oa-error-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.oa-results {
+  flex: 1;
+  min-height: 120px;
+  overflow: hidden;
+}
+
+.oa-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  background: color-mix(in srgb, var(--orca-background, #000) 60%, transparent);
+}
+.oa-dialog {
+  width: min(360px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  color: var(--orca-popover-foreground, var(--vscode-foreground));
+  background: var(--orca-popover, var(--vscode-editorWidget-background));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.oa-dialog.production {
+  border-color: var(--vscode-errorForeground);
+}
+.oa-dialog h2 {
+  margin: 0;
+  font-size: 14px;
+}
+.oa-dialog p {
+  margin: 0;
+}
+.oa-dialog input {
+  font: inherit;
+  padding: 4px 6px;
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 3px;
+}
+.oa-dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.oa-tooltip {
+  position: fixed;
+  z-index: 10;
+  max-width: min(320px, calc(100vw - 8px));
+  padding: 3px 7px;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+  color: var(--orca-popover-foreground, var(--vscode-foreground));
+  background: var(--orca-popover, var(--vscode-editorWidget-background));
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}

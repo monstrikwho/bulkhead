@@ -1,0 +1,20 @@
+{
+  "name": "@bulkhead/orca",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Bulkhead as an Orca plugin: a trusted worker on the host runtime and the webview apps in an Orca panel. Built into dist/, which is the plugin folder.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && node scripts/dev.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@bulkhead/core": "workspace:*",
+    "@bulkhead/host": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

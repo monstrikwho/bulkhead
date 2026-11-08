@@ -1,5 +1,6 @@
 export * from './connections/access'
 export * from './connections/drafts'
+export * from './connections/formSession'
 export * from './connections/manager'
 export * from './connections/profiles'
 export * from './connections/secrets'

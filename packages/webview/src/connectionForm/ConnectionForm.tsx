@@ -12,6 +12,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { DatabaseIcon } from './DatabaseIcon'
 import { looksLikeConnectionString, parseConnectionString, testConnection } from './hostRequests'
 import { Icon } from '../icons'
+import { hostName } from '../vscode'
 
 export interface FormStart extends FormStartData {
   entry: CatalogEntry
@@ -569,7 +570,7 @@ function SecretRow({
         </button>
       </div>
       <p className="cf-description">
-        <Icon name="lock" size={12} /> Kept in VS Code secret storage on this machine, never in
+        <Icon name="lock" size={12} /> Kept in {hostName} secret storage on this machine, never in
         settings.
       </p>
     </Row>

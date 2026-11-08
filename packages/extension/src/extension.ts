@@ -3,8 +3,8 @@ import {
   AgentAccess,
   CancellationError,
   ConnectionManager,
-  driverFor,
   QueryRunner,
+  removeConnection,
   SecretVault,
   unlockWrites,
 } from '@bulkhead/host'
@@ -127,9 +127,7 @@ export function activate(context: vscode.ExtensionContext): void {
         remove,
       )
       if (answer !== remove) return
-      await manager.disconnect(profile.id)
-      await secrets.deleteAll(profile.id, driverFor(profile.driver).secretFields)
-      await store.remove(profile.id)
+      await removeConnection(formDeps, profile)
     }),
 
     command('bulkhead.connection.connect', async (element?: TreeElement) => {
