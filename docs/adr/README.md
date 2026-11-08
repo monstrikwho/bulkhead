@@ -13,3 +13,4 @@ A new decision gets the next number; a reversed one is marked _Superseded_ with 
 | 0005 | [License hygiene](0005-license-hygiene.md)                                           |
 | 0006 | [AI agents talk to Bulkhead over MCP](0006-ai-agents-over-mcp.md)                    |
 | 0007 | [AI agents may test and save connections](0007-agents-test-and-save-connections.md)  |
+| 0008 | [A host-agnostic runtime behind ports](0008-host-agnostic-runtime.md)                |

@@ -27,6 +27,20 @@ export default tseslint.config(
     },
   },
   {
+    // The runtime shared by every editor host: VS Code specifics come in through its ports.
+    files: ['packages/host/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'vscode', message: 'packages/host runs outside VS Code too; add a port.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['packages/webview/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     languageOptions: { globals: globals.browser },

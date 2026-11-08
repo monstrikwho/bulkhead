@@ -1,7 +1,7 @@
 import type { ConnectionProfile } from '@bulkhead/core'
+import type { ConnectionManager } from '@bulkhead/host'
 import * as vscode from 'vscode'
 
-import type { ConnectionManager } from '../connections/manager'
 import type { ConnectionStore } from '../connections/store'
 
 export interface EditorBinding {

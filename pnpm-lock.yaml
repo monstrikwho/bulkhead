@@ -75,6 +75,9 @@ importers:
       '@bulkhead/driver-postgres':
         specifier: workspace:*
         version: link:../driver-postgres
+      '@bulkhead/host':
+        specifier: workspace:*
+        version: link:../host
       '@modelcontextprotocol/sdk':
         specifier: 1.32.1
         version: 1.32.1(zod@4.6.7)
@@ -96,6 +99,21 @@ importers:
       mocha:
         specifier: ^11.8.0
         version: 11.8.0
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+
+  packages/host:
+    dependencies:
+      '@bulkhead/core':
+        specifier: workspace:*
+        version: link:../core
+      '@bulkhead/driver-postgres':
+        specifier: workspace:*
+        version: link:../driver-postgres
+      '@modelcontextprotocol/sdk':
+        specifier: 1.32.1
+        version: 1.32.1(zod@4.6.7)
       zod:
         specifier: ^4.6.7
         version: 4.6.7

@@ -1,20 +1,15 @@
-import { ConfigError, parseConnectionProfile, type ConnectionProfile } from '@bulkhead/core'
+import type { ConnectionProfile } from '@bulkhead/core'
+import { readProfiles, type ProfileList, type ProfileStore } from '@bulkhead/host'
 import * as vscode from 'vscode'
 
 const SECTION = 'bulkhead'
 const KEY = 'connections'
 
-export interface InvalidProfile {
-  index: number
-  name: string
-  message: string
-}
-
 /**
  * Connection profiles live in the `bulkhead.connections` user setting: Settings Sync carries
  * them between machines and there is no account of our own. Secrets never go here.
  */
-export class ConnectionStore implements vscode.Disposable {
+export class ConnectionStore implements ProfileStore, vscode.Disposable {
   private readonly changed = new vscode.EventEmitter<void>()
   readonly onDidChange = this.changed.event
   private readonly subscription: vscode.Disposable
@@ -25,24 +20,8 @@ export class ConnectionStore implements vscode.Disposable {
     })
   }
 
-  list(): { profiles: ConnectionProfile[]; invalid: InvalidProfile[] } {
-    const raw = vscode.workspace.getConfiguration(SECTION).get<unknown[]>(KEY, [])
-    const profiles: ConnectionProfile[] = []
-    const invalid: InvalidProfile[] = []
-    raw.forEach((entry, index) => {
-      try {
-        profiles.push(parseConnectionProfile(entry))
-      } catch (error) {
-        if (!(error instanceof ConfigError)) throw error
-        const name = (entry as { name?: unknown } | null)?.name
-        invalid.push({
-          index,
-          name: typeof name === 'string' ? name : `#${index + 1}`,
-          message: error.message,
-        })
-      }
-    })
-    return { profiles, invalid }
+  list(): ProfileList {
+    return readProfiles(vscode.workspace.getConfiguration(SECTION).get<unknown[]>(KEY, []))
   }
 
   get(id: string): ConnectionProfile | undefined {

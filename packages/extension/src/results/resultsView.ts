@@ -1,8 +1,9 @@
 import { isWebviewToHost, type HostToWebview, type WelcomeAction } from '@bulkhead/core'
+import type { ResultsTarget } from '@bulkhead/host'
 import * as vscode from 'vscode'
 
 import { webviewHtml, webviewRoot } from '../webview/html'
-import { RunChannel, type ResultsTarget } from './channel'
+import { RunChannel } from './channel'
 
 /**
  * The results of queries run from SQL editors, a React app in the bottom panel. Before the first

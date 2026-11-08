@@ -7,22 +7,26 @@ import {
   parseConnectionProfile,
   type ConnectionDraft,
   type ConnectionProfile,
+  type Driver,
+  type DriverDescriptor,
+  type FormStartData,
+  type ParseResult,
 } from '@bulkhead/core'
-import * as vscode from 'vscode'
 
-import { driverFor } from '../drivers'
+import { driverFor, drivers } from '../drivers'
+import type { Localize, ProfileStore } from '../ports'
 import type { ConnectionManager } from './manager'
 import type { SecretVault } from './secrets'
-import type { ConnectionStore } from './store'
 
 /**
  * Testing and saving a connection draft. The connection form and the MCP tools both come here,
  * so a draft from an agent passes exactly the checks of one typed by hand.
  */
 export interface DraftDependencies {
-  store: ConnectionStore
+  store: ProfileStore
   secrets: SecretVault
   manager: ConnectionManager
+  t: Localize
 }
 
 export type TestResult =
@@ -42,7 +46,7 @@ export async function testDraft(
 ): Promise<TestResult> {
   try {
     const draft = parseDraft(raw)
-    const profile = toProfile(draft, { requireName: false })
+    const profile = toProfile(deps.t, draft, { requireName: false })
     const secrets = await secretsFor(deps.secrets, draft, profile, existing)
     return { ok: true, ...(await deps.manager.probe(profile, secrets)) }
   } catch (error) {
@@ -50,13 +54,13 @@ export async function testDraft(
   }
 }
 
-/** Validates and stores the draft: profile in settings, secrets in SecretStorage. */
+/** Validates and stores the draft: the profile in the profile store, secrets in the vault. */
 export async function saveDraft(
   deps: DraftDependencies,
   draft: ConnectionDraft,
   existing: ConnectionProfile | undefined,
 ): Promise<ConnectionProfile> {
-  const profile = toProfile(draft, { requireName: true })
+  const profile = toProfile(deps.t, draft, { requireName: true })
   for (const field of driverFor(profile.driver).secretFields) {
     const typed = draft.secrets[field.key] ?? ''
     // Editing: empty keeps the saved value. New: empty is stored, meaning "no password".
@@ -69,11 +73,12 @@ export async function saveDraft(
 
 /** Builds and validates the profile the draft describes; throws `ConfigError`. */
 function toProfile(
+  t: Localize,
   draft: ConnectionDraft,
   { requireName }: { requireName: boolean },
 ): ConnectionProfile {
   const name = draft.name.trim()
-  if (requireName && !name) throw new ConfigError(vscode.l10n.t('Give the connection a name.'))
+  if (requireName && !name) throw new ConfigError(t('Give the connection a name.'))
   const driver = driverFor(draft.driver)
   // Empty fields mean "use the driver's default".
   const options = Object.fromEntries(
@@ -107,6 +112,51 @@ async function secretsFor(
     if (value) secrets[field.key] = value
   }
   return secrets
+}
+
+export function describeDriver(driver: Driver): DriverDescriptor {
+  return {
+    kind: driver.kind,
+    displayName: driver.displayName,
+    optionFields: driver.optionFields,
+    secretFields: driver.secretFields,
+  }
+}
+
+/** A saved connection as the form shows it; secrets are only reported as present. */
+export async function savedDraft(
+  profile: ConnectionProfile,
+  secrets: SecretVault,
+): Promise<FormStartData> {
+  const savedSecrets: string[] = []
+  for (const field of driverFor(profile.driver).secretFields) {
+    if ((await secrets.get(profile.id, field.key)) !== undefined) savedSecrets.push(field.key)
+  }
+  return {
+    draft: {
+      id: profile.id,
+      name: profile.name,
+      driver: profile.driver,
+      production: profile.production,
+      readOnly: profile.readOnly ?? false,
+      options: profile.options,
+      secrets: {},
+    },
+    savedSecrets,
+  }
+}
+
+/** Tries every driver; `null` when the text is not a connection string at all. */
+export function parseConnectionString(text: string): ParseResult | null {
+  for (const driver of drivers.values()) {
+    try {
+      const parsed = driver.parseConnectionString?.(text)
+      if (parsed) return { ok: true, driver: driver.kind, ...parsed }
+    } catch (error) {
+      return { ok: false, message: describeError(error) }
+    }
+  }
+  return null
 }
 
 /**

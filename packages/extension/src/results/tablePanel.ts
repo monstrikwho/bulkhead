@@ -1,8 +1,9 @@
 import { isWebviewToHost, type HostToWebview } from '@bulkhead/core'
+import type { ResultsTarget } from '@bulkhead/host'
 import * as vscode from 'vscode'
 
 import { webviewHtml, webviewRoot } from '../webview/html'
-import { RunChannel, type ResultsTarget } from './channel'
+import { RunChannel } from './channel'
 
 export interface TableSource {
   /** Same key → same tab, e.g. `<connection id>/<node id>`. */

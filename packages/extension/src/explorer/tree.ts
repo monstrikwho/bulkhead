@@ -1,9 +1,8 @@
 import type { ConnectionProfile, ExplorerNode } from '@bulkhead/core'
+import { CancellationError, driverFor, type ConnectionManager } from '@bulkhead/host'
 import * as vscode from 'vscode'
 
-import type { ConnectionManager } from '../connections/manager'
 import type { ConnectionStore } from '../connections/store'
-import { driverFor } from '../drivers'
 
 export type TreeElement =
   | { type: 'connection'; profile: ConnectionProfile }
@@ -58,7 +57,7 @@ export class ConnectionTreeProvider implements vscode.TreeDataProvider<TreeEleme
       if (nodes.length === 0) return [{ type: 'message', profile, text: 'Empty', error: false }]
       return nodes.map((node) => ({ type: 'node', profile, node }))
     } catch (error) {
-      if (error instanceof vscode.CancellationError) {
+      if (error instanceof CancellationError) {
         return [{ type: 'message', profile, text: vscode.l10n.t('Not connected'), error: false }]
       }
       const message = error instanceof Error ? error.message : String(error)

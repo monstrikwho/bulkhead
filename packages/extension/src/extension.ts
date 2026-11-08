@@ -1,31 +1,69 @@
 import type { ConnectionProfile, WelcomeAction } from '@bulkhead/core'
+import {
+  AgentAccess,
+  CancellationError,
+  ConnectionManager,
+  driverFor,
+  QueryRunner,
+  SecretVault,
+  unlockWrites,
+} from '@bulkhead/host'
 import * as vscode from 'vscode'
 
-import { ConnectionFormPanel } from './connections/formPanel'
-import { ConnectionManager } from './connections/manager'
-import { SecretVault } from './connections/secrets'
+import { ConnectionFormPanel, type FormDependencies } from './connections/formPanel'
 import { ConnectionStore } from './connections/store'
-import { driverFor } from './drivers'
 import { ConnectionTreeProvider, type TreeElement } from './explorer/tree'
-import { AgentAccess } from './mcp/agentAccess'
+import { secretStore, t, vscodeUi } from './hostPorts'
+import {
+  agentStorageDir,
+  bridgeSource,
+  extensionVersion,
+  VsCodeAgentAccess,
+  workspaceFolders,
+} from './mcp/agentAccess'
 import { EditorBindings } from './query/editorBindings'
-import { QueryRunner } from './query/runner'
+import { EditorRunner } from './query/runner'
 import { ResultsView } from './results/resultsView'
 import { TablePanel } from './results/tablePanel'
 
 export function activate(context: vscode.ExtensionContext): void {
   const store = new ConnectionStore()
-  const secrets = new SecretVault(context.secrets)
-  const manager = new ConnectionManager(secrets)
+  const secrets = new SecretVault(secretStore(context.secrets))
+  const ui = vscodeUi((existing, proposal) =>
+    ConnectionFormPanel.show(formDeps, existing, proposal),
+  )
+  const manager = new ConnectionManager(secrets, ui)
   const tree = new ConnectionTreeProvider(store, manager)
   const bindings = new EditorBindings(context.workspaceState, store, manager)
   const results = new ResultsView(context.extensionUri, {
     cancel: (runId) => queries.cancel(runId),
     action: (action) => void welcomeAction(action),
   })
-  const queries = new QueryRunner(manager, bindings, results)
-  const formDeps = { extensionUri: context.extensionUri, store, secrets, manager }
-  const agents = new AgentAccess(context, formDeps)
+  const queries = new QueryRunner(manager, {
+    results,
+    maxRows: () => vscode.workspace.getConfiguration('bulkhead').get<number>('query.maxRows', 1000),
+    ui,
+    t,
+  })
+  const editorQueries = new EditorRunner(queries, bindings)
+  const formDeps: FormDependencies = {
+    extensionUri: context.extensionUri,
+    store,
+    secrets,
+    manager,
+    t,
+  }
+  const agents = new VsCodeAgentAccess(
+    context,
+    new AgentAccess({
+      deps: formDeps,
+      ui,
+      storageDir: agentStorageDir(context),
+      bridgeSource: bridgeSource(context),
+      version: extensionVersion(context),
+      workspaceFolders,
+    }),
+  )
   void agents.update()
 
   const treeView = vscode.window.createTreeView('bulkhead.connections', {
@@ -38,7 +76,7 @@ export function activate(context: vscode.ExtensionContext): void {
       try {
         await handler(...args)
       } catch (error) {
-        if (error instanceof vscode.CancellationError) return
+        if (error instanceof CancellationError) return
         const message = error instanceof Error ? error.message : String(error)
         void vscode.window.showErrorMessage(`Bulkhead: ${message}`)
       }
@@ -108,8 +146,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     command('bulkhead.connection.unlockWrites', async (element?: TreeElement) => {
       const profile = await profileOf(element)
-      if (!profile || !(await confirmUnlock(profile))) return
-      await manager.setAccessMode(profile, 'read-write')
+      if (profile) await unlockWrites(manager, ui, profile)
     }),
 
     command('bulkhead.connection.lockWrites', async (element?: TreeElement) => {
@@ -130,8 +167,8 @@ export function activate(context: vscode.ExtensionContext): void {
       await vscode.window.showTextDocument(document)
     }),
 
-    command('bulkhead.query.run', () => queries.runEditor('statement')),
-    command('bulkhead.query.runAll', () => queries.runEditor('script')),
+    command('bulkhead.query.run', () => editorQueries.runEditor('statement')),
+    command('bulkhead.query.runAll', () => editorQueries.runEditor('script')),
     command('bulkhead.query.cancel', () => queries.cancel()),
 
     command('bulkhead.query.selectConnection', async () => {
@@ -197,31 +234,4 @@ async function welcomeAction(action: WelcomeAction): Promise<void> {
       await vscode.env.openExternal(vscode.Uri.parse(`${REPOSITORY}/blob/main/CHANGELOG.md`))
       break
   }
-}
-
-/**
- * Unlocking a production connection requires typing its name: a deliberate act, not a reflex
- * click. Other read-only connections only need a confirmation.
- */
-async function confirmUnlock(profile: ConnectionProfile): Promise<boolean> {
-  if (!profile.production) {
-    const unlock = vscode.l10n.t('Unlock')
-    const answer = await vscode.window.showWarningMessage(
-      vscode.l10n.t('Allow writes on "{0}" until you disconnect?', profile.name),
-      { modal: true },
-      unlock,
-    )
-    return answer === unlock
-  }
-  const typed = await vscode.window.showInputBox({
-    title: vscode.l10n.t('Unlock writes on PRODUCTION'),
-    prompt: vscode.l10n.t(
-      'Writes stay unlocked until you disconnect or lock them again. Type "{0}" to confirm.',
-      profile.name,
-    ),
-    ignoreFocusOut: true,
-    validateInput: (value) =>
-      value === profile.name ? undefined : vscode.l10n.t('Type the connection name exactly'),
-  })
-  return typed === profile.name
 }

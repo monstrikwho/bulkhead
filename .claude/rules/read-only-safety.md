@@ -3,7 +3,8 @@ paths:
   - 'packages/core/src/safety/**'
   - 'packages/core/src/sql/**'
   - 'packages/driver-*/src/session.ts'
-  - 'packages/extension/src/connections/manager.ts'
+  - 'packages/host/src/connections/manager.ts'
+  - 'packages/host/src/connections/access.ts'
   - 'docs/read-only-mode.md'
 ---
 

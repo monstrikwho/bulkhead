@@ -1,0 +1,20 @@
+{
+  "name": "@bulkhead/host",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Bulkhead runtime that any editor host reuses: sessions, drafts, query runs and the MCP server. Node APIs, no VS Code API; host specifics come in through ports.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@bulkhead/core": "workspace:*",
+    "@bulkhead/driver-postgres": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "^4.6.7"
+  }
+}

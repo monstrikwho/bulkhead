@@ -23,14 +23,22 @@ packages/core/             contracts and pure logic, shared by host and webview 
   src/safety/                read-only classifier and policy
   src/sql/                   lexer and statement splitter (Postgres/ClickHouse quoting)
 packages/driver-postgres/  node-postgres driver: session, explorer, options, connection strings
-packages/extension/        everything that touches the VS Code API
-  src/extension.ts           activation, commands
-  src/connections/           store (settings), secrets (SecretStorage), manager (sessions),
-                             drafts (test/save a draft), formPanel (connection form panel)
-  src/explorer/tree.ts       connection tree
-  src/query/                 editor bindings, query runner
-  src/results/               results webview view (bottom panel), table tabs (editor area)
+packages/host/             host-agnostic runtime (Node, no `vscode`), reused by every editor host
+  src/ports.ts               what a host provides: ProfileStore, SecretStore, HostUi,
+                             ResultsTarget, Localize (ADR 0008)
+  src/connections/           manager (sessions), access (unlock writes), drafts (test/save a
+                             draft), secrets (SecretVault key format), profiles
+  src/query/runner.ts        QueryRunner, pickStatement
   src/mcp/                   MCP server for AI agents, stdio bridge, instance discovery
+  src/drivers.ts             driver registry
+packages/extension/        the VS Code host: everything that touches the VS Code API
+  src/extension.ts           activation, commands
+  src/hostPorts.ts           VS Code implementations of the host ports
+  src/connections/           store (settings), formPanel (connection form panel)
+  src/explorer/tree.ts       connection tree
+  src/query/                 editor bindings, EditorRunner (selection, cursor)
+  src/results/               results webview view (bottom panel), table tabs (editor area)
+  src/mcp/agentAccess.ts     MCP provider registration, "Connect an AI Agent"
   src/webview/html.ts        shared webview HTML + CSP
   src/test/                  VS Code smoke test (mocha, runs in a real VS Code)
 packages/webview/          React apps for both webviews, one bundle; body[data-app] picks the app
@@ -95,7 +103,7 @@ each command's exit code; do not judge by grepping one line of the output.
   ADR when the change touches them.
 - Agreed ideas that are not scheduled go to `docs/backlog/<item>.md`, one file each, listed in
   `docs/backlog/README.md`; an item moves to `docs/roadmap.md` when a release picks it up.
-- MCP tools (`packages/extension/src/mcp/`) may list, test and save connections, but no tool may
+- MCP tools (`packages/host/src/mcp/`) may list, test and save connections, but no tool may
   return a saved secret, turn off production/read-only without the form, or unlock writes
   (ADR 0006, 0007).
 
@@ -121,7 +129,7 @@ each command's exit code; do not judge by grepping one line of the output.
 - Webview panels appear in `vscode.window.tabGroups` asynchronously, with view type
   `mainThreadWebview-<viewType>`; tests must wait for them.
 - Node reports a refused `localhost` as an `AggregateError` with an empty message (IPv6 and IPv4
-  attempts). Use `describeError` from `connections/drafts.ts` for user-facing errors.
+  attempts). Use `describeError` from `packages/host/src/connections/drafts.ts` for user-facing errors.
 - `brandIcons.ts` is generated from the `simple-icons` package (version in its header); very dark
   brand colours are drawn with the theme foreground so they stay visible.
 

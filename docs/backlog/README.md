@@ -12,3 +12,4 @@ Each file starts with a short **Why**, then **What**, and **Open questions** if 
 | [MCP: read-only queries for agents](mcp-read-only-query.md) | AI agents |
 | [MCP: show agent activity](mcp-agent-activity.md)           | AI agents |
 | [MCP: native registration in Cursor](mcp-cursor-native.md)  | AI agents |
+| [Orca host: Bulkhead as an Orca plugin](orca-host.md)       | Hosts     |

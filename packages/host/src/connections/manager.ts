@@ -6,9 +6,10 @@ import {
   type DriverSession,
   type Tunnel,
 } from '@bulkhead/core'
-import * as vscode from 'vscode'
 
 import { driverFor } from '../drivers'
+import { Emitter, type Disposable } from '../events'
+import { CancellationError, type HostUi } from '../ports'
 import type { SecretVault } from './secrets'
 
 interface Live {
@@ -23,15 +24,18 @@ interface Live {
  * unlock or lock is an in-memory override that lasts until the user disconnects or the window
  * reloads, so a production connection always comes back read-only.
  */
-export class ConnectionManager implements vscode.Disposable {
+export class ConnectionManager implements Disposable {
   private readonly live = new Map<string, Live>()
   private readonly pending = new Map<string, Promise<Live>>()
   private readonly overrides = new Map<string, AccessMode>()
-  private readonly changed = new vscode.EventEmitter<string>()
+  private readonly changed = new Emitter<string>()
   /** Fires with a connection id whenever it connects, disconnects or changes access mode. */
   readonly onDidChange = this.changed.event
 
-  constructor(private readonly secrets: SecretVault) {}
+  constructor(
+    private readonly secrets: SecretVault,
+    private readonly ui: HostUi,
+  ) {}
 
   isConnected(id: string): boolean {
     return this.live.has(id)
@@ -161,14 +165,9 @@ export class ConnectionManager implements vscode.Disposable {
     for (const field of driverFor(profile.driver).secretFields) {
       let value = await this.secrets.get(profile.id, field.key)
       if (value === undefined) {
-        value = await vscode.window.showInputBox({
-          title: `${profile.name}: ${field.label}`,
-          prompt: vscode.l10n.t('Stored in VS Code SecretStorage on this machine.'),
-          password: true,
-          ignoreFocusOut: true,
-        })
+        value = await this.ui.askSecret(profile, field)
         if (value === undefined && !field.optional) {
-          throw new vscode.CancellationError()
+          throw new CancellationError()
         }
         if (value !== undefined) await this.secrets.set(profile.id, field.key, value)
       }

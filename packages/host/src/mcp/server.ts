@@ -19,7 +19,7 @@ export interface ConnectionSummary {
   target: string
 }
 
-/** What the tools do; implemented with the VS Code API in `agentAccess.ts`. */
+/** What the tools do; implemented over the host ports in `agentAccess.ts`. */
 export interface AgentTools {
   listConnections(): Promise<ConnectionSummary[]>
   /** Opens the filled-in connection form; resolves to what to tell the agent. */

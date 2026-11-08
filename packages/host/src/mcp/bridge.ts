@@ -1,8 +1,8 @@
 /**
  * `dist/mcp-bridge.js`: the stdio MCP server agents outside VS Code start (Claude Code, Cursor,
  * Codex …). It holds no logic and no secrets of its own: every message goes to the HTTP server
- * of the Bulkhead window found by `discovery.ts`. The extension copies this file next to the
- * instance files in its global storage, a path that survives extension updates.
+ * of the Bulkhead window found by `discovery.ts`. The host copies this file next to the instance
+ * files (VS Code: its global storage), a path that survives extension updates.
  *
  * Runs on VS Code's own runtime (`ELECTRON_RUN_AS_NODE=1`), so the user needs no Node install.
  * stdout carries protocol messages only.

@@ -8,7 +8,7 @@ export const MCP_PATH = '/mcp'
  * How the stdio bridge finds a running Bulkhead. Every VS Code window runs its own extension
  * host and MCP server, and writes one file here with the port and token. The bridge picks the
  * window whose workspace contains the agent's working directory, so the form opens where the
- * user is looking. Shared by the extension and the bridge: Node only, no `vscode`.
+ * user is looking. Shared by the host runtime and the bridge: Node only.
  */
 export interface McpInstance {
   pid: number

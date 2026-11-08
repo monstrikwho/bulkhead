@@ -1,12 +1,6 @@
 import type { HostToWebview } from '@bulkhead/core'
 import type * as vscode from 'vscode'
 
-/** Where a query run reports to: the results panel or a table tab. */
-export interface ResultsTarget {
-  reveal(): Promise<void> | void
-  post(message: HostToWebview): void
-}
-
 /**
  * Delivers run messages to a webview. Messages sent before the webview reports `ready` are
  * replayed in order, including after VS Code recreates it; only the latest run is kept.

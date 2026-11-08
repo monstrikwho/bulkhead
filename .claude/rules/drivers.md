@@ -4,13 +4,13 @@ paths:
   - 'packages/core/src/driver.ts'
   - 'packages/core/src/catalog.ts'
   - 'packages/core/src/connection.ts'
-  - 'packages/extension/src/drivers.ts'
+  - 'packages/host/src/drivers.ts'
 ---
 
 # Drivers
 
 A driver implements `Driver` from `packages/core/src/driver.ts` in its own package
-`packages/driver-<name>`, and the extension registers it in `packages/extension/src/drivers.ts`.
+`packages/driver-<name>`, and the host registers it in `packages/host/src/drivers.ts`.
 Steps for a new one: `CONTRIBUTING.md` → "Adding a database type".
 
 ## What the driver owns

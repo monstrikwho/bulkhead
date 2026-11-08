@@ -1,19 +1,24 @@
 import {
   isFormWebviewToHost,
   type ConnectionProfile,
-  type Driver,
-  type DriverDescriptor,
   type FormHostToWebview,
   type FormStartData,
-  type ParseResult,
   type ProposedDraft,
 } from '@bulkhead/core'
+import {
+  describeDriver,
+  describeError,
+  drivers,
+  parseConnectionString,
+  parseDraft,
+  saveDraft,
+  savedDraft,
+  testDraft,
+  type DraftDependencies,
+} from '@bulkhead/host'
 import * as vscode from 'vscode'
 
-import { driverFor, drivers } from '../drivers'
 import { webviewHtml, webviewRoot } from '../webview/html'
-import { describeError, parseDraft, saveDraft, testDraft, type DraftDependencies } from './drafts'
-import type { SecretVault } from './secrets'
 
 export interface FormDependencies extends DraftDependencies {
   extensionUri: vscode.Uri
@@ -93,7 +98,11 @@ export class ConnectionFormPanel {
         await this.init()
         break
       case 'parse':
-        this.post({ type: 'parsed', requestId: message.requestId, result: parse(message.text) })
+        this.post({
+          type: 'parsed',
+          requestId: message.requestId,
+          result: parseConnectionString(message.text),
+        })
         break
       case 'test':
         this.post({
@@ -150,49 +159,4 @@ export class ConnectionFormPanel {
     ConnectionFormPanel.open.delete(this.key)
     for (const disposable of this.disposables) disposable.dispose()
   }
-}
-
-export function describeDriver(driver: Driver): DriverDescriptor {
-  return {
-    kind: driver.kind,
-    displayName: driver.displayName,
-    optionFields: driver.optionFields,
-    secretFields: driver.secretFields,
-  }
-}
-
-/** A saved connection as the form shows it; secrets are only reported as present. */
-export async function savedDraft(
-  profile: ConnectionProfile,
-  secrets: SecretVault,
-): Promise<FormStartData> {
-  const savedSecrets: string[] = []
-  for (const field of driverFor(profile.driver).secretFields) {
-    if ((await secrets.get(profile.id, field.key)) !== undefined) savedSecrets.push(field.key)
-  }
-  return {
-    draft: {
-      id: profile.id,
-      name: profile.name,
-      driver: profile.driver,
-      production: profile.production,
-      readOnly: profile.readOnly ?? false,
-      options: profile.options,
-      secrets: {},
-    },
-    savedSecrets,
-  }
-}
-
-/** Tries every driver; `null` when the text is not a connection string at all. */
-function parse(text: string): ParseResult | null {
-  for (const driver of drivers.values()) {
-    try {
-      const parsed = driver.parseConnectionString?.(text)
-      if (parsed) return { ok: true, driver: driver.kind, ...parsed }
-    } catch (error) {
-      return { ok: false, message: describeError(error) }
-    }
-  }
-  return null
 }
