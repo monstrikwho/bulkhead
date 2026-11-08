@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { DRIVER_KINDS, type DriverKind } from './connection'
+import { DRIVER_KINDS, transportConfigSchema, type DriverKind } from './connection'
 import type { OptionField, SecretField } from './driver'
 
 /**
@@ -25,6 +25,8 @@ export const connectionDraftSchema = z.object({
   production: z.boolean(),
   readOnly: z.boolean(),
   options: z.record(z.string(), z.unknown()),
+  /** How to reach the database; older forms and agents leave it out and mean direct. */
+  transport: transportConfigSchema.default({ kind: 'direct' }),
   /**
    * Secrets typed in the form. When editing, a key that is missing or empty keeps the saved
    * value; a new connection with an empty password stores "no password".

@@ -1,6 +1,14 @@
-import { ConfigError, parseConnectionProfile } from '@bulkhead/core'
+import { ConfigError, parseConnectionProfile, type ConnectionProfile } from '@bulkhead/core'
 
+import { driverFor } from '../drivers'
 import type { InvalidProfile, ProfileList } from '../ports'
+
+/** Where a connection points, for trees and agents: `app@db:5432/app via ssh bastion`. */
+export function describeConnection(profile: ConnectionProfile): string {
+  const driver = driverFor(profile.driver)
+  const target = driver.describe(driver.parseOptions(profile.options))
+  return profile.transport.kind === 'ssh' ? `${target} via ssh ${profile.transport.host}` : target
+}
 
 /**
  * Validates stored profile entries one by one, so one broken entry (hand-edited, or written by a

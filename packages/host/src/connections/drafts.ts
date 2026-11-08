@@ -94,6 +94,7 @@ function toProfile(
     production: draft.production,
     // Production is always read-only at first; the flag only matters for other connections.
     ...(draft.readOnly && !draft.production ? { readOnly: true } : {}),
+    transport: draft.transport,
     options,
   })
 }
@@ -140,6 +141,7 @@ export async function savedDraft(
       production: profile.production,
       readOnly: profile.readOnly ?? false,
       options: profile.options,
+      transport: profile.transport,
       secrets: {},
     },
     savedSecrets,

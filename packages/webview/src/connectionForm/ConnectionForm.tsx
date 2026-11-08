@@ -40,6 +40,7 @@ export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCan
   const [readOnly, setReadOnly] = useState(initial.readOnly)
   const [values, setValues] = useState<Values>(() => toValues(driver.optionFields, initial.options))
   const [secrets, setSecrets] = useState<Record<string, string>>(initial.secrets)
+  const [tunnel, setTunnel] = useState<TunnelValues>(() => toTunnel(initial.transport))
   const [test, setTest] = useState<TestState>({ status: 'idle' })
   const [databases, setDatabases] = useState<string[]>([])
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -83,8 +84,15 @@ export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCan
     readOnly: production || readOnly,
     // Keep options this form does not show, e.g. ones edited by hand in settings.json.
     options: { ...initial.options, ...fromValues(fields, values) },
+    transport: fromTunnel(tunnel),
     secrets,
   })
+
+  const editTunnel = (change: Partial<TunnelValues>) => {
+    setTunnel((current) => ({ ...current, ...change }))
+    setTest({ status: 'idle' })
+  }
+  const sshMissing = submitted && tunnel.kind === 'ssh' && !tunnel.host.trim()
 
   const applyParsed = (result: ParseResult | null): string | undefined => {
     if (result === null) return 'Not a connection string Bulkhead can open.'
@@ -107,6 +115,7 @@ export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCan
   const save = () => {
     setSubmitted(true)
     if (fields.some((item) => item.required && values[item.key] === '')) return
+    if (tunnel.kind === 'ssh' && !tunnel.host.trim()) return
     onSave(buildDraft())
   }
 
@@ -182,7 +191,17 @@ export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCan
         </Row>
 
         {host && (
-          <Row label={port ? 'Host and port' : host.label} required invalid={missing.has('host')}>
+          <Row
+            label={
+              tunnel.kind === 'ssh'
+                ? 'Database host (from SSH)'
+                : port
+                  ? 'Host and port'
+                  : host.label
+            }
+            required
+            invalid={missing.has('host')}
+          >
             <div
               className={`cf-host ${missing.has('host') || missing.has('port') ? 'invalid' : ''}`}
             >
@@ -246,6 +265,50 @@ export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCan
             }
           />
         ))}
+
+        <Section icon="plug" title="Connect through">
+          <Row label="Tunnel">
+            <Segmented
+              value={tunnel.kind}
+              options={[
+                { value: 'direct', label: 'Direct' },
+                { value: 'ssh', label: 'SSH tunnel' },
+              ]}
+              onChange={(value) => editTunnel({ kind: value === 'ssh' ? 'ssh' : 'direct' })}
+            />
+          </Row>
+          {tunnel.kind === 'ssh' && (
+            <>
+              <Row label="SSH host" required invalid={sshMissing}>
+                <input
+                  value={tunnel.host}
+                  placeholder="alias from ~/.ssh/config, or user@host:22"
+                  aria-label="SSH host"
+                  spellCheck={false}
+                  onChange={(event) => editTunnel({ host: event.target.value })}
+                />
+                <p className="cf-description">
+                  Runs your OpenSSH client, so ~/.ssh/config applies: User, Port, ProxyJump,
+                  IdentityFile. Host and port above are the database as seen from the SSH server.
+                </p>
+              </Row>
+              <Row label="Identity file">
+                <input
+                  value={tunnel.identityFile}
+                  placeholder="from ~/.ssh/config, e.g. ~/.ssh/id_ed25519"
+                  aria-label="Identity file"
+                  spellCheck={false}
+                  onChange={(event) => editTunnel({ identityFile: event.target.value })}
+                />
+                <p className="cf-description">
+                  ssh never prompts here and may run without an ssh-agent (always in Orca), so use a
+                  key it can read without asking for a passphrase. Unknown host keys must be
+                  accepted once with ssh in a terminal.
+                </p>
+              </Row>
+            </>
+          )}
+        </Section>
 
         <Section icon="shield" title="Safety">
           <Row label="Environment">
@@ -333,7 +396,7 @@ export function ConnectionForm({ driver, start, saveError, onBack, onSave, onCan
           <Icon name="error" /> {saveError}
         </p>
       )}
-      {submitted && missing.size > 0 && (
+      {submitted && (missing.size > 0 || sshMissing) && (
         <p className="cf-save-error error" role="alert">
           <Icon name="error" /> Fill in the required fields.
         </p>
@@ -369,7 +432,7 @@ function Section({
   title,
   children,
 }: {
-  icon: 'shield' | 'gear'
+  icon: 'shield' | 'gear' | 'plug'
   title: string
   children: ReactNode
 }) {
@@ -581,6 +644,25 @@ function TestStatus({ state }: { state: TestState }) {
       {count ? ` · ${count} database${count === 1 ? '' : 's'}` : ''}
     </span>
   )
+}
+
+interface TunnelValues {
+  kind: 'direct' | 'ssh'
+  host: string
+  identityFile: string
+}
+
+/** Switching back to Direct and again to SSH keeps what was typed. */
+function toTunnel(transport: ConnectionDraft['transport']): TunnelValues {
+  return transport.kind === 'ssh'
+    ? { kind: 'ssh', host: transport.host, identityFile: transport.identityFile ?? '' }
+    : { kind: 'direct', host: '', identityFile: '' }
+}
+
+function fromTunnel(tunnel: TunnelValues): ConnectionDraft['transport'] {
+  if (tunnel.kind === 'direct') return { kind: 'direct' }
+  const identityFile = tunnel.identityFile.trim()
+  return { kind: 'ssh', host: tunnel.host.trim(), ...(identityFile ? { identityFile } : {}) }
 }
 
 /** Option values as the inputs show them; `withDefaults` fills empty fields from the driver. */

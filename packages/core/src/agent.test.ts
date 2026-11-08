@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { describeDriverOptions, proposeDraft } from './agent'
+import { connectionProposalSchema, describeDriverOptions, proposeDraft } from './agent'
 import { ConfigError } from './connection'
 import type { ConnectionDraft, DriverDescriptor } from './connectionForm'
 
@@ -24,6 +24,7 @@ const saved: ConnectionDraft = {
   production: true,
   readOnly: false,
   options: { host: 'orders.internal', port: '5432', user: 'reader', ssl: 'require' },
+  transport: { kind: 'direct' },
   secrets: {},
 }
 
@@ -45,6 +46,7 @@ describe('proposeDraft', () => {
         showSystemSchemas: false,
         database: 'neondb',
       },
+      transport: { kind: 'direct' },
       secrets: {},
     })
     expect(draft.id).toBeUndefined()
@@ -117,6 +119,36 @@ describe('proposeDraft', () => {
     })
     expect(draft.readOnly).toBe(true)
     expect(changed).toEqual([])
+  })
+
+  it('sets up an SSH tunnel and reports it as a change; production stays read-only', () => {
+    const { draft, changed, warnings } = proposeDraft({
+      proposal: {
+        transport: { kind: 'ssh', host: 'bastion-eu' },
+        options: { host: '10.0.12.7' },
+      },
+      driver,
+      existing: saved,
+    })
+    expect(draft.transport).toEqual({ kind: 'ssh', host: 'bastion-eu' })
+    expect(draft.production).toBe(true)
+    expect(changed).toEqual(['Host', 'Connect through'])
+    expect(warnings).toEqual([])
+  })
+
+  it('keeps the tunnel of a saved connection when the proposal says nothing about it', () => {
+    const tunnelled: ConnectionDraft = { ...saved, transport: { kind: 'ssh', host: 'bastion' } }
+    const { draft, changed } = proposeDraft({ proposal: {}, driver, existing: tunnelled })
+    expect(draft.transport).toEqual({ kind: 'ssh', host: 'bastion' })
+    expect(changed).toEqual([])
+  })
+
+  it('refuses an SSH host that could pass for an ssh option', () => {
+    expect(
+      connectionProposalSchema.safeParse({
+        transport: { kind: 'ssh', host: '-oProxyCommand=touch /tmp/x' },
+      }).success,
+    ).toBe(false)
   })
 
   it('refuses unknown options and values of the wrong type', () => {

@@ -1,15 +1,16 @@
 import {
-  createTransport,
   initialAccessMode,
   type AccessMode,
   type ConnectionProfile,
   type DriverSession,
+  type Endpoint,
   type Tunnel,
 } from '@bulkhead/core'
 
 import { driverFor } from '../drivers'
 import { Emitter, type Disposable } from '../events'
 import { CancellationError, type HostUi } from '../ports'
+import { createTransport, type TransportOptions } from '../transport'
 import type { SecretVault } from './secrets'
 
 interface Live {
@@ -35,6 +36,7 @@ export class ConnectionManager implements Disposable {
   constructor(
     private readonly secrets: SecretVault,
     private readonly ui: HostUi,
+    private readonly transports: TransportOptions = {},
   ) {}
 
   isConnected(id: string): boolean {
@@ -100,15 +102,17 @@ export class ConnectionManager implements Disposable {
     const driver = driverFor(profile.driver)
     const options = driver.parseOptions(profile.options)
     const started = Date.now()
-    const tunnel = await createTransport(profile.transport).open(driver.target(options))
+    const tunnel = await this.openTunnel(profile, driver.target(options))
     try {
-      const session = await driver.connect({
-        profile,
-        options,
-        endpoint: tunnel.endpoint,
-        secrets,
-        accessMode: 'read-only',
-      })
+      const session = await connectThrough(tunnel, () =>
+        driver.connect({
+          profile,
+          options,
+          endpoint: tunnel.endpoint,
+          secrets,
+          accessMode: 'read-only',
+        }),
+      )
       try {
         const nodes = await session.listChildren()
         return {
@@ -133,15 +137,17 @@ export class ConnectionManager implements Disposable {
     const options = driver.parseOptions(profile.options)
     const secrets = await this.resolveSecrets(profile)
     const accessMode = this.accessMode(profile)
-    const tunnel = await createTransport(profile.transport).open(driver.target(options))
+    const tunnel = await this.openTunnel(profile, driver.target(options))
     try {
-      const session = await driver.connect({
-        profile,
-        options,
-        endpoint: tunnel.endpoint,
-        secrets,
-        accessMode,
-      })
+      const session = await connectThrough(tunnel, () =>
+        driver.connect({
+          profile,
+          options,
+          endpoint: tunnel.endpoint,
+          secrets,
+          accessMode,
+        }),
+      )
       const live = { session, tunnel, fingerprint: fingerprint(profile, accessMode) }
       this.live.set(profile.id, live)
       this.changed.fire(profile.id)
@@ -150,6 +156,10 @@ export class ConnectionManager implements Disposable {
       await tunnel.close()
       throw error
     }
+  }
+
+  private openTunnel(profile: ConnectionProfile, target: Endpoint): Promise<Tunnel> {
+    return createTransport(profile.transport, this.transports).open(target)
   }
 
   private async close(id: string): Promise<void> {
@@ -175,6 +185,17 @@ export class ConnectionManager implements Disposable {
       if (value) resolved[field.key] = value
     }
     return resolved
+  }
+}
+
+/** A driver error behind a tunnel is often the tunnel's; say what the tunnel knows. */
+async function connectThrough<T>(tunnel: Tunnel, connect: () => Promise<T>): Promise<T> {
+  try {
+    return await connect()
+  } catch (error) {
+    const reason = tunnel.failure?.()
+    if (reason) throw new Error(reason, { cause: error })
+    throw error
   }
 }
 

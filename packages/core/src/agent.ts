@@ -1,7 +1,12 @@
 import { z } from 'zod'
 
 import { catalogEntryForHost } from './catalog'
-import { ConfigError, DRIVER_KINDS } from './connection'
+import {
+  ConfigError,
+  DRIVER_KINDS,
+  transportConfigSchema,
+  type TransportConfig,
+} from './connection'
 import type { ConnectionDraft, DriverDescriptor } from './connectionForm'
 import type { OptionField, ParsedConnectionString } from './driver'
 
@@ -32,7 +37,8 @@ export const connectionProposalSchema = z.object({
     .optional()
     .describe(
       'Passwords and keys by field, e.g. {"password": "..."}; they win over the connection ' +
-        'string. Stored only in VS Code SecretStorage and never returned. Omit to keep the ' +
+        'string. Stored only in the editor’s secret storage (OS keychain) and never returned. ' +
+        'Omit to keep the ' +
         'saved ones of an existing connection.',
     ),
   name: z.string().optional().describe('Display name, e.g. "orders (staging)".'),
@@ -48,6 +54,16 @@ export const connectionProposalSchema = z.object({
     .record(z.string(), z.unknown())
     .optional()
     .describe('Driver settings; they win over the connection string. See the tool description.'),
+  transport: transportConfigSchema
+    .optional()
+    .describe(
+      'How to reach the database. {"kind":"ssh","host":"<~/.ssh/config alias or ' +
+        'user@host[:port]>","identityFile":"~/.ssh/id_ed25519"} forwards a local port through ' +
+        'the system ssh client; host and port in options are then the database address as seen ' +
+        'from the SSH server. ssh runs without an agent and never prompts, so the key must be ' +
+        'usable without a passphrase. {"kind":"direct"} connects straight. Omit to keep the ' +
+        'current one (direct for a new connection).',
+    ),
 })
 export type ConnectionProposal = z.infer<typeof connectionProposalSchema>
 
@@ -78,6 +94,7 @@ export function proposeDraft({ proposal, driver, existing, parsed }: ProposeInpu
     production: false,
     readOnly: false,
     options: {},
+    transport: { kind: 'direct' },
     secrets: {},
   }
   const merged = { ...base.options, ...parsed?.options, ...options }
@@ -95,6 +112,7 @@ export function proposeDraft({ proposal, driver, existing, parsed }: ProposeInpu
     production,
     readOnly: production || (proposal.readOnly ?? base.readOnly),
     options: { ...defaults, ...merged },
+    transport: proposal.transport ?? base.transport,
     secrets: { ...parsed?.secrets, ...secrets },
   }
 
@@ -111,6 +129,7 @@ export function proposeDraft({ proposal, driver, existing, parsed }: ProposeInpu
         changed.push(field.label)
       }
     }
+    if (!sameTransport(draft.transport, existing.transport)) changed.push('Connect through')
     for (const field of driver.secretFields) {
       if (draft.secrets[field.key]) changed.push(field.label)
     }
@@ -180,6 +199,13 @@ function fieldDefaults(fields: readonly OptionField[]): Record<string, unknown> 
   return Object.fromEntries(
     fields.flatMap((field) => (field.default === undefined ? [] : [[field.key, field.default]])),
   )
+}
+
+function sameTransport(a: TransportConfig, b: TransportConfig): boolean {
+  if (a.kind === 'ssh' && b.kind === 'ssh') {
+    return a.host === b.host && (a.identityFile ?? '') === (b.identityFile ?? '')
+  }
+  return a.kind === b.kind
 }
 
 /** Settings may hold `"5432"` where the form has `5432`. */

@@ -1,5 +1,10 @@
 import type { ConnectionProfile, ExplorerNode } from '@bulkhead/core'
-import { CancellationError, driverFor, type ConnectionManager } from '@bulkhead/host'
+import {
+  CancellationError,
+  describeConnection,
+  driverFor,
+  type ConnectionManager,
+} from '@bulkhead/host'
 import * as vscode from 'vscode'
 
 import type { ConnectionStore } from '../connections/store'
@@ -86,7 +91,7 @@ export class ConnectionTreeProvider implements vscode.TreeDataProvider<TreeEleme
     item.id = profile.id
     let summary: string
     try {
-      summary = driver.describe(driver.parseOptions(profile.options))
+      summary = describeConnection(profile)
     } catch (error) {
       summary = error instanceof Error ? error.message : String(error)
     }

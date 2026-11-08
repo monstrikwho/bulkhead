@@ -65,6 +65,7 @@ export function ConnectionFormApp() {
           production: false,
           readOnly: false,
           options: { ...defaults, ...entry.defaults, ...parsed?.options },
+          transport: { kind: 'direct' },
           secrets: { ...parsed?.secrets },
         },
         savedSecrets: [],
