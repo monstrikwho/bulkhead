@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- SSH tunnels: **Connect through → SSH** in the connection form. Bulkhead runs your system
+  `ssh`, so hosts from `~/.ssh/config` work as in your terminal: aliases, `ProxyJump`,
+  `IdentityFile`, `known_hosts`. It never prompts: the key must load without a passphrase prompt
+  (or come from your SSH agent), and a host key you have not accepted yet is refused with the
+  command to accept it in a terminal. AI agents can propose SSH connections too.
+- Bulkhead for Orca, the agent IDE, as an Orca plugin (not published yet):
+  the connection tree in Orca's sidebar, SQL consoles and table data as tabs in the main area,
+  the same read-only production safety and MCP server for agents.
+
+### Fixed
+
+- **Open Data** on a table where your role may read only some columns (column-level `GRANT`)
+  no longer fails with "permission denied": it shows the columns you can read and says how many
+  are hidden. When you can read none, it says so instead of running a query.
+- An AI agent's `configure_connection` no longer replaces a connection form you have open with
+  unsaved changes; the agent is told to ask you to save or cancel it first.
+
 ## [0.3.0] - 2026-10-24
 
 ### Added

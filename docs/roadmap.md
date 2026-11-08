@@ -23,7 +23,9 @@ Stages are ordered; each ends with a release. Estimates are rough and will be re
 
 ## 0.2 — Delivery: SSH and Kubernetes
 
-- [ ] SSH tunnel transport (`ssh2`): password, key, agent, jump hosts, `~/.ssh/config` hosts
+- [x] SSH tunnel transport through the system OpenSSH client: keys, agent, jump hosts,
+      `~/.ssh/config` hosts (ADR 0009)
+- [ ] SSH password authentication (needs a prompt channel; `BatchMode` refuses it today)
 - [ ] `kubectl port-forward` transport: context, namespace, pod/service, auto-reconnect
 - [ ] Generic "command tunnel" (cloud-sql-proxy, AWS SSM, …)
 

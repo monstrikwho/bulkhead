@@ -23,13 +23,15 @@
       ┌──────────┴──────────┐
       │ driver-postgres     │  … driver-clickhouse, driver-redis, driver-rabbitmq
       └──────────┬──────────┘
-                 │ Transport: direct today; ssh, kubectl port-forward next
+                 │ Transport: direct, ssh (system OpenSSH); kubectl next
                  ▼
              database
 ```
 
-Another editor host (Orca, next) replaces `packages/extension` with its own adapter over the same
-`packages/host`.
+Orca is the second editor host: `packages/orca` replaces `packages/extension` with an Orca plugin
+over the same `packages/host` (ADR 0008, 0010). Its worker implements the ports on Orca's plugin
+storage, secrets and panels; the same webview bundle draws the sidebar tree, the connection form
+and the console and table tabs.
 
 ## Packages
 
@@ -39,7 +41,8 @@ Another editor host (Orca, next) replaces `packages/extension` with its own adap
 | `@bulkhead/driver-postgres` | host           | core, `pg`, `pg-cursor` | PostgreSQL: tree, execution, read-only enforcement on the server side                                                               |
 | `@bulkhead/host`            | host (Node)    | core, drivers, MCP SDK  | The runtime every editor host shares: sessions, drafts, secrets vault, query runs, MCP server and bridge (ADR 0008)                 |
 | `bulkhead` (extension)      | host           | core, host              | Everything that touches the VS Code API, plus the VS Code implementations of the host ports                                         |
-| `@bulkhead/webview`         | webview        | core (types), React     | Results UI                                                                                                                          |
+| `@bulkhead/orca`            | Orca worker    | core, host              | The Orca plugin: worker, host ports on Orca's API, tab files in the Bulkhead workspace (ADR 0010)                                   |
+| `@bulkhead/webview`         | webview        | core (types), React     | Results, connection form; in Orca also the tree, consoles and table tabs                                                            |
 
 `core` must not import `vscode`, Node or DOM APIs: it is shared by both sides and is the place
 for logic that deserves unit tests. `host` may use Node but not `vscode` (ESLint refuses the
@@ -68,7 +71,9 @@ built bridge, the version and the open folders.
 
 **Connecting.** `ConnectionManager.session(profile)` (host) parses driver options, reads secrets
 from `SecretVault` (asking once through `HostUi.askSecret` if missing), opens the transport, then
-calls `driver.connect` with the transport's local endpoint and the current access mode. Sessions are
+calls `driver.connect` with the transport's local endpoint and the current access mode. The
+`ssh` transport (`host/src/transport/ssh.ts`) runs the system `ssh -N -L` to a free local port,
+so `~/.ssh/config` applies as in a terminal and ssh never prompts (ADR 0009). Sessions are
 cached per profile and dropped when the profile changes (a fingerprint of driver, transport, options
 and mode).
 
@@ -107,7 +112,20 @@ MCP provider API and runs **Connect an AI Agent…**. Every tool turns the agent
 with `proposeDraft` (`core/src/agent.ts`). `configure_connection` opens the connection form through
 `HostUi.openConnectionForm`, marked as filled in by an agent; `test_connection` and
 `save_connection` pass it to `host/src/connections/drafts.ts`, the code behind the form's Test and
-Save (ADR 0007). `save_connection` refuses drafts that turn off production or read-only.
+Save (ADR 0007). `save_connection` refuses drafts that turn off production or read-only, and
+`configure_connection` refuses while the user has a form open (`FormBusyError`), so an agent never
+replaces unsaved input.
+
+**Column privileges.** The Postgres explorer reads, per relation, which columns the role may
+select (`has_column_privilege`). `previewQuery` names only those columns when some are revoked,
+and `previewNotice` says how many are hidden, or that none is readable (then there is no query).
+Hosts pass the notice to `QueryRunner.run`, which sends it with `run-started`.
+
+**Orca tabs.** The Orca sidebar asks the worker to open a console or a table. The worker writes a
+`.bhsql` or `.bhtable` file into its own folder workspace "Bulkhead" (created once through Orca's
+CLI, then found by path), shows that workspace and opens the file with `editor.open`. The custom
+editor frame reads the file through `orca.document`, sends `bulkhead.run`, and the results come
+back to that frame only (ADR 0010).
 
 ## Storage
 
@@ -118,6 +136,9 @@ Save (ADR 0007). `save_connection` refuses drafts that turn off production or re
 | Editor → connection binding | `workspaceState`                                   | no              |
 | Writes unlocked             | memory only                                        | no              |
 | MCP port and token          | `globalStorage/mcp/instances/<pid>.json`, mode 600 | no              |
+| Orca: profiles, passwords   | plugin storage, plugin secrets (`orca.secrets`)    | no, per machine |
+| Orca: consoles, table tabs  | `bulkhead-orca/Bulkhead/` (a folder workspace)     | no              |
+| Orca: MCP port and token    | `bulkhead-orca/instances/<pid>.json`, mode 600     | no              |
 
 ## Extending
 

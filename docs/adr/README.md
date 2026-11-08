@@ -14,3 +14,5 @@ A new decision gets the next number; a reversed one is marked _Superseded_ with 
 | 0006 | [AI agents talk to Bulkhead over MCP](0006-ai-agents-over-mcp.md)                    |
 | 0007 | [AI agents may test and save connections](0007-agents-test-and-save-connections.md)  |
 | 0008 | [A host-agnostic runtime behind ports](0008-host-agnostic-runtime.md)                |
+| 0009 | [SSH tunnels through the system OpenSSH client](0009-ssh-through-system-openssh.md)  |
+| 0010 | [Orca host: sidebar tree, editor tabs in a Bulkhead workspace](0010-orca-host.md)    |
