@@ -419,7 +419,7 @@
     "@bulkhead/core": "workspace:*",
     "@bulkhead/driver-postgres": "workspace:*",
     "@bulkhead/host": "workspace:*",
-    "@modelcontextprotocol/sdk": "1.32.1",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@types/mocha": "^10.0.10",
     "@types/vscode": "1.96.0",
     "@vscode/test-electron": "^3.1.0",
